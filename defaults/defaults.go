@@ -16,3 +16,7 @@ func ColorForeground() tcell.Color {
 func ColorStatusBar() tcell.Color {
 	return color.DarkCyan
 }
+
+func KeyBindingsQuit() []tcell.Key {
+	return []tcell.Key{tcell.KeyCtrlQ, tcell.KeyQ, tcell.KeyEscape}
+}

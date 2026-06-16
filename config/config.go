@@ -6,24 +6,14 @@ import (
 	"os"
 
 	"github.com/gdamore/tcell/v3"
-	"github.com/gdamore/tcell/v3/color"
 )
 
 type Color struct {
 	tcell.Color
 }
 
-func (c *Color) UnmarshalJSON(b []byte) error {
-	var s string
-	if err := json.Unmarshal(b, &s); err != nil {
-		return err
-	}
-	c.Color = color.GetColor(s)
-	return nil
-}
-
-func (c Color) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.String())
+type Key struct {
+	tcell.Key
 }
 
 type Colors struct {
@@ -32,8 +22,13 @@ type Colors struct {
 	StatusBar  Color `json:"status_bar"`
 }
 
+type KeyBindings struct {
+	Quit []Key `json:"quit"`
+}
+
 type Config struct {
-	Colors Colors `json:"colors"`
+	Colors      Colors      `json:"colors"`
+	KeyBindings KeyBindings `json:"keybindings"`
 }
 
 func NewDefault() *Config {
@@ -42,6 +37,9 @@ func NewDefault() *Config {
 			Foreground: Color{defaults.ColorForeground()},
 			Background: Color{defaults.ColorBackground()},
 			StatusBar:  Color{defaults.ColorStatusBar()},
+		},
+		KeyBindings: KeyBindings{
+			Quit: makeKeysFromTcellKeys(defaults.KeyBindingsQuit()),
 		},
 	}
 }

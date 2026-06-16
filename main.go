@@ -31,6 +31,15 @@ func draw(s tcell.Screen, cfg *config.Config, filename string) {
 	s.Show()
 }
 
+func IsKeyAny(key tcell.Key, keys []config.Key) bool {
+	for _, k := range keys {
+		if key == k.Key {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	filename := flag.String("f", "", "file to open")
 	showHelp := flag.Bool("help", false, "show help")
@@ -58,7 +67,7 @@ func main() {
 		case *tcell.EventResize:
 			draw(screen, cfg, *filename)
 		case *tcell.EventKey:
-			if e.Key() == tcell.KeyCtrlQ || e.Key() == tcell.KeyEscape {
+			if IsKeyAny(e.Key(), cfg.KeyBindings.Quit) {
 				return
 			}
 		}

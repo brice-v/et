@@ -1,0 +1,3 @@
+todo:
+
+- [ ] main uses tcell.EventKey so things like KeyQ are not captured I think
