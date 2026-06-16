@@ -1,2 +1,4 @@
 et
 *.exe
+*.out
+et.json
