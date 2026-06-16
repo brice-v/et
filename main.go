@@ -5,13 +5,26 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+
+	"et/action"
+	"et/defaults"
 
 	"github.com/gdamore/tcell/v3"
 )
 
+func init() {
+	if f, err := initLogging(); err != nil {
+		log.Printf("warning: could not initialize log file: %s", err)
+	} else {
+		log.Printf("et %s started, logging to %s", version, f.Name())
+	}
+}
+
 func main() {
 	filename := flag.String("f", "", "file to open")
 	showHelp := flag.Bool("help", false, "show help")
+	showVersion := flag.Bool("version", false, "show version")
 	flag.Parse()
 
 	if *showHelp {
@@ -19,36 +32,75 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *showVersion {
+		fmt.Printf("et version %s\n", version)
+		os.Exit(0)
+	}
+
+	if *filename == "" {
+		if args := flag.Args(); len(args) > 0 {
+			*filename = args[0]
+		}
+	}
+
+	cfg := loadConfig()
+
+	keyActions := make(map[keySpec]action.Action)
+	for name, actStr := range cfg.Keybindings {
+		ks, err := parseKeySpec(name)
+		if err != nil {
+			log.Fatalf("config error:\n  %s", err)
+		}
+		act, err := action.Parse(actStr)
+		if err != nil {
+			log.Fatalf("config error:\n  %s", err)
+		}
+		keyActions[ks] = act
+	}
+
+	var fileLines []string
+	hasFile := *filename != ""
+	if hasFile {
+		data, err := os.ReadFile(*filename)
+		if err != nil {
+			log.Fatalf("error opening %s:\n  %s", *filename, err)
+		}
+		fileLines = strings.Split(string(data), "\n")
+	}
+
 	screen, err := tcell.NewScreen()
 	if err != nil {
-		log.Fatalf("creating screen: %v", err)
+		log.Fatalf("screen error:\n  %s", err.Error())
 	}
 	if err := screen.Init(); err != nil {
-		log.Fatalf("initializing screen: %v", err)
+		log.Fatalf("screen init error:\n  %s", err.Error())
 	}
 	defer screen.Fini()
 
-	width, height := screen.Size()
-	style := tcell.StyleDefault.Background(tcell.ColorBlack).Foreground(tcell.ColorWhite)
-	statusStyle := style.Background(tcell.ColorDarkCyan)
+	bg := defaults.ColorBackground()
+	if cfg.Colors.Background != "" {
+		if c, err := parseColor(cfg.Colors.Background); err == nil {
+			bg = c
+		}
+	}
+	fg := defaults.ColorForeground()
+	if cfg.Colors.Foreground != "" {
+		if c, err := parseColor(cfg.Colors.Foreground); err == nil {
+			fg = c
+		}
+	}
+	status := defaults.ColorStatus()
+	if cfg.Colors.StatusBG != "" {
+		if c, err := parseColor(cfg.Colors.StatusBG); err == nil {
+			status = c
+		}
+	}
+
+	style := tcell.StyleDefault.Background(bg).Foreground(fg)
+	statusStyle := style.Background(status)
 
 	draw := func() {
-		screen.Clear()
-		width, height = screen.Size()
-		for x := 0; x < width; x++ {
-			screen.SetContent(x, height-1, ' ', nil, statusStyle)
-		}
-		statusMsg := fmt.Sprintf(" et — %s | Ctrl+Q quit", *filename)
-		if *filename == "" {
-			statusMsg = " et — <new file> | Ctrl+Q quit"
-		}
-		for i, ch := range statusMsg {
-			if i >= width {
-				break
-			}
-			screen.SetContent(i, height-1, ch, nil, statusStyle)
-		}
-		screen.Show()
+		drawScreen(screen, *filename, hasFile, fileLines, style, statusStyle, cfg.TabWidth)
 	}
 
 	draw()
@@ -58,8 +110,10 @@ func main() {
 		case *tcell.EventResize:
 			draw()
 		case *tcell.EventKey:
-			if e.Key() == tcell.KeyCtrlQ || e.Key() == tcell.KeyEscape {
-				return
+			for ks, act := range keyActions {
+				if ks.matches(e) && act == action.Quit {
+					return
+				}
 			}
 		}
 	}
