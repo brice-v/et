@@ -1,3 +1,4 @@
 todo:
 
-- [ ] main uses tcell.EventKey so things like KeyQ are not captured I think
+- [ ] should fallback to os.Stderr when log file failed to be created?
+- [x] main uses tcell.EventKey so things like KeyQ are not captured I think
