@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"et/defaults"
 	"os"
+	"strings"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -24,6 +25,19 @@ type Colors struct {
 
 type KeyBindings struct {
 	Quit []Key `json:"quit"`
+}
+
+func (c *Config) GetQuitKeyBindingsAsStr() string {
+	var s strings.Builder
+	s.WriteByte('[')
+	for i, k := range c.KeyBindings.Quit {
+		s.WriteString(k.String())
+		if i != len(c.KeyBindings.Quit)-1 {
+			s.WriteByte(',')
+		}
+	}
+	s.WriteByte(']')
+	return s.String()
 }
 
 type Config struct {

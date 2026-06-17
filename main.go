@@ -22,10 +22,12 @@ func draw(s tcell.Screen, cfg *config.Config, filename string) {
 	for x := range w {
 		s.SetContent(x, h-1, ' ', nil, statusStyle)
 	}
-	statusMsg := fmt.Sprintf(" et — %s | Ctrl+Q quit", filename)
+	quitKeyBindsString := cfg.GetQuitKeyBindingsAsStr()
+	fnameStr := filename
 	if filename == "" {
-		statusMsg = " et — <new file> | Ctrl+Q quit"
+		fnameStr = "<new file>"
 	}
+	statusMsg := fmt.Sprintf(" et - %s | %s to quit", fnameStr, quitKeyBindsString)
 	for i, ch := range statusMsg {
 		if i >= w {
 			break
@@ -63,6 +65,9 @@ func main() {
 	} else if *showVersion || *showVersion2 {
 		fmt.Printf("et v%s\n", version)
 		os.Exit(0)
+	}
+	if *filename == "" && len(os.Args) > 1 {
+		*filename = os.Args[1]
 	}
 
 	screen, err := tcell.NewScreen()
