@@ -19,11 +19,11 @@ func drawLine(s tcell.Screen, baseStyle tcell.Style, w, lineNumberOnScreen int, 
 	lineRunes := []rune(line)
 	lineLen := len(lineRunes)
 	for x := range w {
-		if x >= lineLen || lineLen == 0 {
-			s.SetContent(x, lineNumberOnScreen, ' ', nil, baseStyle)
-		} else {
-			s.SetContent(x, lineNumberOnScreen, lineRunes[x], nil, baseStyle)
+		ch := ' '
+		if x < lineLen && lineLen != 0 {
+			ch = lineRunes[x]
 		}
+		s.SetContent(x, lineNumberOnScreen, ch, nil, baseStyle)
 	}
 }
 
@@ -120,7 +120,6 @@ func main() {
 			slog.Warn("could not read file", "err", err)
 		}
 		fileContent = string(data)
-		slog.Info("fileContent", "content", fileContent)
 	}
 	draw(screen, cfg, *fileName, fileContent)
 
