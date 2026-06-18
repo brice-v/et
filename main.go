@@ -2,8 +2,8 @@ package main
 
 import (
 	"et/config"
+	"et/editor"
 	"et/keys"
-	"et/ui"
 	"flag"
 	"fmt"
 	"log"
@@ -54,20 +54,13 @@ func main() {
 
 	cfg := config.NewDefault()
 	slog.Info("defaults", "cfg", cfg)
-	fileContent := ""
-	if *fileName != "" {
-		data, err := os.ReadFile(*fileName)
-		if err != nil {
-			slog.Warn("could not read file", "err", err)
-		}
-		fileContent = string(data)
-	}
-	ui.Draw(screen, cfg, *fileName, fileContent)
+	et := editor.New(screen, cfg, *fileName)
+	et.Draw()
 
 	for ev := range screen.EventQ() {
 		switch e := ev.(type) {
 		case *tcell.EventResize:
-			ui.Draw(screen, cfg, *fileName, fileContent)
+			et.Draw()
 		case *tcell.EventKey:
 			keyAsRune := ""
 			if e.Key() == tcell.KeyRune {
