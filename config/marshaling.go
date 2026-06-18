@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
@@ -23,16 +24,29 @@ func (c Color) MarshalJSON() ([]byte, error) {
 }
 
 func (k *Key) String() string {
+	var parts []string
+	if k.Modifiers&tcell.ModCtrl != 0 {
+		parts = append(parts, "ctrl")
+	}
+	if k.Modifiers&tcell.ModShift != 0 {
+		parts = append(parts, "shift")
+	}
+	if k.Modifiers&tcell.ModAlt != 0 {
+		parts = append(parts, "alt")
+	}
+	base := ""
 	switch k.Key {
-	case tcell.KeyCtrlQ:
-		return "ctrl+q"
 	case tcell.KeyQ:
-		return "q"
+		base = "q"
 	case tcell.KeyEscape:
-		return "esc"
+		base = "esc"
 	default:
 		return ""
 	}
+	if len(parts) == 0 {
+		return base
+	}
+	return strings.Join(parts, "+") + "+" + base
 }
 
 func (k *Key) UnmarshalJSON(b []byte) error {
@@ -41,34 +55,54 @@ func (k *Key) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	kk, err := parseKeyBindingAsKey(s)
+	kk, mod, err := parseKeyBinding(s)
 	if err != nil {
 		return err
 	}
 	k.Key = kk
+	k.Modifiers = mod
 	return nil
 }
 
-func parseKeyBindingAsKey(s string) (tcell.Key, error) {
-	switch s {
-	case "ctrl+q":
-		return tcell.KeyCtrlQ, nil
-	case "q":
-		return tcell.KeyQ, nil
-	case "esc", "escape":
-		return tcell.KeyEscape, nil
+func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
+	parts := strings.Split(s, "+")
+	if len(parts) == 0 {
+		return 0, 0, fmt.Errorf("empty key binding")
 	}
-	return tcell.Key0, fmt.Errorf("failed to parse %s as tcell key", s)
+
+	var mod tcell.ModMask
+	var keyParts []string
+	for _, p := range parts {
+		switch p {
+		case "ctrl":
+			mod |= tcell.ModCtrl
+		case "shift":
+			mod |= tcell.ModShift
+		case "alt":
+			mod |= tcell.ModAlt
+		default:
+			keyParts = append(keyParts, p)
+		}
+	}
+
+	if len(keyParts) != 1 {
+		return 0, 0, fmt.Errorf("failed to parse %s as key binding", s)
+	}
+
+	keyStr := keyParts[0]
+	var key tcell.Key
+	switch keyStr {
+	case "q":
+		key = tcell.KeyQ
+	case "esc", "escape":
+		key = tcell.KeyEscape
+	default:
+		return 0, 0, fmt.Errorf("failed to parse %s as tcell key", keyStr)
+	}
+
+	return key, mod, nil
 }
 
 func (k Key) MarshalJSON() ([]byte, error) {
 	return json.Marshal(k.String())
-}
-
-func makeKeysFromTcellKeys(keys []tcell.Key) []Key {
-	ks := make([]Key, len(keys))
-	for i := range len(keys) {
-		ks[i] = Key{keys[i]}
-	}
-	return ks
 }

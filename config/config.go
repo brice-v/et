@@ -15,6 +15,7 @@ type Color struct {
 
 type Key struct {
 	tcell.Key
+	Modifiers tcell.ModMask
 }
 
 type Colors struct {
@@ -53,7 +54,11 @@ func NewDefault() *Config {
 			StatusBar:  Color{defaults.ColorStatusBar()},
 		},
 		KeyBindings: KeyBindings{
-			Quit: makeKeysFromTcellKeys(defaults.KeyBindingsQuit()),
+			Quit: []Key{
+				{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl},
+				{Key: tcell.KeyQ, Modifiers: tcell.ModNone},
+				{Key: tcell.KeyEscape, Modifiers: tcell.ModNone},
+			},
 		},
 	}
 }

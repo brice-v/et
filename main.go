@@ -2,6 +2,7 @@ package main
 
 import (
 	"et/config"
+	"et/keys"
 	"flag"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
+	_ "github.com/gdamore/tcell/v3/encoding"
 )
 
 const logFileName = "et.log"
@@ -68,15 +70,6 @@ func draw(s tcell.Screen, cfg *config.Config, fileName, fileContent string) {
 	s.Show()
 }
 
-func IsKeyAny(key tcell.Key, keyAsRune string, keys []config.Key) bool {
-	for _, k := range keys {
-		if key == k.Key || (keyAsRune != "" && keyAsRune == k.String()) {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
 	fileName := flag.String("f", "", "file to open")
 	showHelp := flag.Bool("help", false, "show help")
@@ -132,7 +125,7 @@ func main() {
 			if e.Key() == tcell.KeyRune {
 				keyAsRune = e.Str()
 			}
-			if IsKeyAny(e.Key(), keyAsRune, cfg.KeyBindings.Quit) {
+			if keys.IsKeyAny(e.Key(), keyAsRune, e.Modifiers(), cfg.KeyBindings.Quit) {
 				return
 			}
 		}
