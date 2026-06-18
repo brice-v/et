@@ -53,6 +53,7 @@ func main() {
 	defer screen.Fini()
 
 	cfg := config.NewDefault()
+	slog.Info("defaults", "cfg", cfg)
 	fileContent := ""
 	if *fileName != "" {
 		data, err := os.ReadFile(*fileName)

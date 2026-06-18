@@ -8,7 +8,7 @@ import (
 	"github.com/gdamore/tcell/v3"
 )
 
-func drawLine(s tcell.Screen, baseStyle tcell.Style, w, lineNumberOnScreen int, line string) {
+func drawLine(s tcell.Screen, cfg *config.Config, baseStyle tcell.Style, w, lineNumberOnScreen int, line string) {
 	lineRunes := []rune(line)
 	lineLen := len(lineRunes)
 	for x := range w {
@@ -16,11 +16,19 @@ func drawLine(s tcell.Screen, baseStyle tcell.Style, w, lineNumberOnScreen int, 
 		if x < lineLen && lineLen != 0 {
 			ch = lineRunes[x]
 		}
-		s.SetContent(x, lineNumberOnScreen, ch, nil, baseStyle)
+		if ch == '\t' {
+			// TODO: Is this needed
+			// lineLen += cfg.TabWidth - 1
+			for offset := range cfg.TabWidth {
+				s.SetContent(x+offset+1, lineNumberOnScreen, '#', nil, baseStyle)
+			}
+		} else {
+			s.SetContent(x+1, lineNumberOnScreen, ch, nil, baseStyle)
+		}
 	}
 }
 
-func drawContent(s tcell.Screen, baseStyle tcell.Style, w, h int, fileContent string) {
+func drawContent(s tcell.Screen, cfg *config.Config, baseStyle tcell.Style, w, h int, fileContent string) {
 	lines := strings.Split(fileContent, "\n")
 	numLines := len(lines)
 	for i := range h {
@@ -28,7 +36,7 @@ func drawContent(s tcell.Screen, baseStyle tcell.Style, w, h int, fileContent st
 		if i < numLines {
 			l = lines[i]
 		}
-		drawLine(s, baseStyle, w, i, l)
+		drawLine(s, cfg, baseStyle, w, i, l)
 	}
 }
 
@@ -36,7 +44,7 @@ func drawStatusBar(s tcell.Screen, cfg *config.Config, baseStyle tcell.Style, w,
 	statusStyle := baseStyle.Background(cfg.Colors.StatusBar.Color)
 	statusBarH := h - 1
 	for x := range w {
-		s.SetContent(x, statusBarH, ' ', nil, statusStyle)
+		s.SetContent(x+1, statusBarH, ' ', nil, statusStyle)
 	}
 	quitKeyBindsString := cfg.GetQuitKeyBindingsAsStr()
 	fnameStr := fileName
@@ -56,7 +64,7 @@ func Draw(s tcell.Screen, cfg *config.Config, fileName, fileContent string) {
 	style := tcell.StyleDefault.Background(cfg.Colors.Background.Color).Foreground(cfg.Colors.Foreground.Color)
 	s.Clear()
 	w, h := s.Size()
-	drawContent(s, style, w, h, fileContent)
+	drawContent(s, cfg, style, w, h, fileContent)
 	drawStatusBar(s, cfg, style, w, h, fileName)
 	s.Show()
 }

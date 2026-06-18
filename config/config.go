@@ -44,6 +44,7 @@ func (c *Config) GetQuitKeyBindingsAsStr() string {
 type Config struct {
 	Colors      Colors      `json:"colors"`
 	KeyBindings KeyBindings `json:"keybindings"`
+	TabWidth    int         `json:"tab_width"`
 }
 
 func NewDefault() *Config {
@@ -54,12 +55,9 @@ func NewDefault() *Config {
 			StatusBar:  Color{defaults.ColorStatusBar()},
 		},
 		KeyBindings: KeyBindings{
-			Quit: []Key{
-				{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl},
-				{Key: tcell.KeyQ, Modifiers: tcell.ModNone},
-				{Key: tcell.KeyEscape, Modifiers: tcell.ModNone},
-			},
+			Quit: makeKeysFromKeyBinding(defaults.KeyBindingsQuit()),
 		},
+		TabWidth: defaults.TabWidth(),
 	}
 }
 

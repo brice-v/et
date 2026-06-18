@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"et/defaults"
 	"fmt"
 	"strings"
 
@@ -105,4 +106,12 @@ func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 
 func (k Key) MarshalJSON() ([]byte, error) {
 	return json.Marshal(k.String())
+}
+
+func makeKeysFromKeyBinding(bindings []defaults.KeyBinding) []Key {
+	keys := make([]Key, len(bindings))
+	for i, b := range bindings {
+		keys[i] = Key{Key: b.Key, Modifiers: b.Modifiers}
+	}
+	return keys
 }
