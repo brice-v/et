@@ -11,20 +11,21 @@ import (
 func drawLine(s tcell.Screen, cfg *config.Config, baseStyle tcell.Style, w, lineNumberOnScreen int, line string) {
 	lineRunes := []rune(line)
 	lineLen := len(lineRunes)
-	for x := range w {
+	runeIndex := 0
+	for x := 1; x < w; x++ {
 		ch := ' '
-		if x < lineLen && lineLen != 0 {
-			ch = lineRunes[x]
+		if runeIndex < lineLen {
+			ch = lineRunes[runeIndex]
 		}
 		if ch == '\t' {
-			// TODO: Is this needed
-			// lineLen += cfg.TabWidth - 1
-			for offset := range cfg.TabWidth {
-				s.SetContent(x+offset+1, lineNumberOnScreen, '#', nil, baseStyle)
+			for twOffset := range cfg.TabWidth {
+				s.SetContent(x+twOffset, lineNumberOnScreen, ' ', nil, baseStyle)
 			}
+			x += cfg.TabWidth - 1
 		} else {
-			s.SetContent(x+1, lineNumberOnScreen, ch, nil, baseStyle)
+			s.SetContent(x, lineNumberOnScreen, ch, nil, baseStyle)
 		}
+		runeIndex++
 	}
 }
 
