@@ -4,7 +4,6 @@ import (
 	"et/config"
 	"et/consts"
 	"et/editor"
-	"et/keys"
 	"flag"
 	"fmt"
 	"log"
@@ -60,13 +59,11 @@ func main() {
 		case *tcell.EventResize:
 			et.Draw()
 		case *tcell.EventKey:
-			keyAsRune := ""
-			if e.Key() == tcell.KeyRune {
-				keyAsRune = e.Str()
-			}
-			if keys.IsKeyAny(e.Key(), keyAsRune, e.Modifiers(), cfg.KeyBindings.Quit) {
+			et.HandleKeyPress(e)
+			if et.Exit {
 				return
 			}
+			et.Draw()
 		}
 	}
 }

@@ -31,9 +31,10 @@ func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
 func (e *Editor) drawContent() {
 	numLines := len(e.fileContentLines)
 	for i := range e.sh - e.sbh {
+		fileLine := e.scrollOffset + i
 		var l []rune
-		if i < numLines {
-			l = e.fileContentLines[i]
+		if fileLine < numLines {
+			l = e.fileContentLines[fileLine]
 		}
 		e.drawLine(i, l)
 	}
@@ -72,10 +73,7 @@ func (e *Editor) drawLineNumbersOrTilde() {
 	}
 	for y := range e.sh - e.sbh {
 		if useLineNums {
-			// TODO: Eventually needs to be based off of fileContentLines
-			// e.lPad-1 so that the space at the end is printed properly
-			// y+1 to be 1 based indexed
-			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, y+1))
+			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, e.scrollOffset+y+1))
 		}
 		for i := range ch {
 			e.s.SetContent(i, y, ch[i], nil, e.baseStyle)
@@ -104,9 +102,16 @@ func (e *Editor) drawWelcomeMessage() {
 func (e *Editor) Draw() {
 	e.s.Clear()
 	e.sw, e.sh = e.s.Size()
+	e.updateViewport()
 	e.drawLineNumbersOrTilde()
+	// Needed for initial draw which would have incorrect pos
+	// and lPad only calculated after above function
+	if e.cx < e.lPad {
+		e.cx = e.lPad
+	}
 	e.drawContent()
 	e.drawStatusBar()
 	e.drawWelcomeMessage()
+	e.s.ShowCursor(e.cx, e.cy)
 	e.s.Show()
 }

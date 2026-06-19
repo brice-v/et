@@ -21,10 +21,18 @@ type Editor struct {
 	sbh       int
 	baseStyle tcell.Style
 
+	// cx, cy cursor x and y position
+	cx, cy int
+	// scrollOffset is the first visible line in the viewport
+	scrollOffset int
+
 	cfg *config.Config
 
 	fileName         string
 	fileContentLines [][]rune
+
+	// Exit is a flag to trigger exit
+	Exit bool
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {

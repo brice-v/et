@@ -1,5 +1,6 @@
 todo:
 
+- [ ] Fix horizontal movement
 - [ ] Macros, record into small buffer via event keys
     - [ ] replay macro by sending those keystrokes onto screen.EventQ()
 - [ ] should fallback to os.Stderr when log file failed to be created?
