@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"et/consts"
 	"fmt"
 )
 
@@ -82,11 +83,30 @@ func (e *Editor) drawLineNumbersOrTilde() {
 	}
 }
 
+func (e *Editor) drawWelcomeMessage() {
+	if e.fileContentLines != nil {
+		return
+	}
+	y := (e.sh / 2) - 2
+	for wi, message := range consts.WelcomeMessages {
+		x := (e.sw / 2) - (len(message) / 2)
+		for i, ch := range message {
+			e.s.SetContent(x+i, y, ch, nil, e.baseStyle)
+		}
+		if wi == 1 {
+			y += 2
+		} else {
+			y++
+		}
+	}
+}
+
 func (e *Editor) Draw() {
 	e.s.Clear()
 	e.sw, e.sh = e.s.Size()
 	e.drawLineNumbersOrTilde()
 	e.drawContent()
 	e.drawStatusBar()
+	e.drawWelcomeMessage()
 	e.s.Show()
 }

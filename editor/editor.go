@@ -28,15 +28,7 @@ type Editor struct {
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
-	fc := getFileContent(fileName)
-	var fcl [][]rune
-	if fc != "" {
-		lines := strings.Split(fc, "\n")
-		fcl = make([][]rune, len(lines))
-		for i, line := range lines {
-			fcl[i] = []rune(line)
-		}
-	}
+	fcl := getFileContent(fileName)
 	baseStyle := tcell.StyleDefault.Background(cfg.Colors.Background.Color).Foreground(cfg.Colors.Foreground.Color)
 	return &Editor{
 		s:                s,
@@ -48,14 +40,19 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	}
 }
 
-func getFileContent(fileName string) string {
-	fileContent := ""
+func getFileContent(fileName string) [][]rune {
+	var fcl [][]rune = nil
 	if fileName != "" {
 		data, err := os.ReadFile(fileName)
 		if err != nil {
 			slog.Warn("could not read file", "err", err)
+			return fcl
 		}
-		fileContent = string(data)
+		lines := strings.Split(string(data), "\n")
+		fcl = make([][]rune, len(lines))
+		for i, line := range lines {
+			fcl[i] = []rune(line)
+		}
 	}
-	return fileContent
+	return fcl
 }

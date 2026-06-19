@@ -2,6 +2,7 @@ package main
 
 import (
 	"et/config"
+	"et/consts"
 	"et/editor"
 	"et/keys"
 	"flag"
@@ -14,16 +15,13 @@ import (
 	_ "github.com/gdamore/tcell/v3/encoding"
 )
 
-const logFileName = "et.log"
-const version = "0.0.1"
-
 func main() {
 	fileName := flag.String("f", "", "file to open")
 	showHelp := flag.Bool("help", false, "show help")
 	showVersion := flag.Bool("version", false, "show version")
 	showVersion2 := flag.Bool("v", false, "show version")
 	flag.Parse()
-	f, err := os.OpenFile(logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(consts.LogFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("failed to create log file: %s", err.Error())
 	}
@@ -34,7 +32,7 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	} else if *showVersion || *showVersion2 {
-		fmt.Printf("et v%s\n", version)
+		fmt.Printf("et v%s\n", consts.Version)
 		os.Exit(0)
 	}
 	if *fileName == "" && len(os.Args) > 1 {
