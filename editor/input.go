@@ -2,7 +2,6 @@ package editor
 
 import (
 	"et/keys"
-	"log/slog"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -26,7 +25,6 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	}
 	e.updateViewport()
 	e.clampCursor()
-	slog.Info("cursor position after keypress", "cx", e.cx, "cy", e.cy)
 	if keys.IsKeyAny(k.Key(), keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
 		e.Exit = true
 	}
