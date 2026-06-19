@@ -57,6 +57,7 @@ func main() {
 	for ev := range screen.EventQ() {
 		switch e := ev.(type) {
 		case *tcell.EventResize:
+			screen.Sync()
 			et.Draw()
 		case *tcell.EventKey:
 			et.HandleKeyPress(e)

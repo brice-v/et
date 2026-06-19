@@ -44,7 +44,7 @@ func (e *Editor) drawStatusBar() {
 	statusStyle := e.baseStyle.Background(e.cfg.Colors.StatusBar.Color)
 	statusBarH := e.sh - e.sbh
 	for x := range e.sw {
-		e.s.SetContent(x+e.lPad, statusBarH, ' ', nil, statusStyle)
+		e.s.SetContent(x, statusBarH, ' ', nil, statusStyle)
 	}
 	quitKeyBindsString := e.cfg.GetQuitKeyBindingsAsStr()
 	fnameStr := e.fileName
