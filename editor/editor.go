@@ -10,8 +10,15 @@ import (
 )
 
 type Editor struct {
-	s         tcell.Screen
-	sw, sh    int
+	s tcell.Screen
+	// sw, sh screen width and height, calculated every Draw
+	sw, sh int
+	// lPad is the padding needed for line numbers or tilde on the left
+	lPad int
+	// sbh is the status bar height (always drawn at bottom but including
+	//  this so it can be more than 1 high)
+	// (defaults to 1)
+	sbh       int
 	baseStyle tcell.Style
 
 	cfg *config.Config
@@ -33,6 +40,7 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	baseStyle := tcell.StyleDefault.Background(cfg.Colors.Background.Color).Foreground(cfg.Colors.Foreground.Color)
 	return &Editor{
 		s:                s,
+		sbh:              1,
 		baseStyle:        baseStyle,
 		cfg:              cfg,
 		fileName:         fileName,

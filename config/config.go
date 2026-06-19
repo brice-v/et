@@ -42,9 +42,11 @@ func (c *Config) GetQuitKeyBindingsAsStr() string {
 }
 
 type Config struct {
-	Colors      Colors      `json:"colors"`
-	KeyBindings KeyBindings `json:"keybindings"`
-	TabWidth    int         `json:"tab_width"`
+	Colors          Colors      `json:"colors"`
+	KeyBindings     KeyBindings `json:"keybindings"`
+	TabWidth        int         `json:"tab_width"`
+	LeftPadString   string      `json:"left_pad_string"`
+	ShowLineNumbers bool        `json:"show_line_numbers"`
 }
 
 func NewDefault() *Config {
@@ -57,7 +59,9 @@ func NewDefault() *Config {
 		KeyBindings: KeyBindings{
 			Quit: makeKeysFromKeyBinding(defaults.KeyBindingsQuit()),
 		},
-		TabWidth: defaults.TabWidth(),
+		TabWidth:        defaults.TabWidth(),
+		LeftPadString:   "~",
+		ShowLineNumbers: true,
 	}
 }
 
