@@ -10,28 +10,30 @@ func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
 	if line != nil {
 		lineLen = len(line)
 	}
-	runeIndex := 0
+	idx := e.hScrollOffset
 	for x := e.lPad; x < e.sw; x++ {
 		ch := ' '
-		if runeIndex < lineLen {
-			ch = line[runeIndex]
+		if idx >= 0 && idx < lineLen {
+			ch = line[idx]
 		}
 		if ch == '\t' {
 			for twOffset := range e.cfg.TabWidth {
-				e.s.SetContent(x+twOffset, lineNumberOnScreen, ' ', nil, e.baseStyle)
+				if x+twOffset < e.sw {
+					e.s.SetContent(x+twOffset, lineNumberOnScreen, ' ', nil, e.baseStyle)
+				}
 			}
 			x += e.cfg.TabWidth - 1
 		} else {
 			e.s.SetContent(x, lineNumberOnScreen, ch, nil, e.baseStyle)
 		}
-		runeIndex++
+		idx++
 	}
 }
 
 func (e *Editor) drawContent() {
 	numLines := len(e.fileContentLines)
 	for i := range e.sh - e.sbh {
-		fileLine := e.scrollOffset + i
+		fileLine := e.vScrollOffset + i
 		var l []rune
 		if fileLine < numLines {
 			l = e.fileContentLines[fileLine]
@@ -73,7 +75,7 @@ func (e *Editor) drawLineNumbersOrTilde() {
 	}
 	for y := range e.sh - e.sbh {
 		if useLineNums {
-			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, e.scrollOffset+y+1))
+			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, e.vScrollOffset+y+1))
 		}
 		for i := range ch {
 			e.s.SetContent(i, y, ch[i], nil, e.baseStyle)
@@ -104,11 +106,7 @@ func (e *Editor) Draw() {
 	e.sw, e.sh = e.s.Size()
 	e.updateViewport()
 	e.drawLineNumbersOrTilde()
-	// Needed for initial draw which would have incorrect pos
-	// and lPad only calculated after above function
-	if e.cx < e.lPad {
-		e.cx = e.lPad
-	}
+	e.clampCursor()
 	e.drawContent()
 	e.drawStatusBar()
 	e.drawWelcomeMessage()

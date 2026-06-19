@@ -23,8 +23,12 @@ type Editor struct {
 
 	// cx, cy cursor x and y position
 	cx, cy int
-	// scrollOffset is the first visible line in the viewport
-	scrollOffset int
+	// vScrollOffset is the first visible line in the viewport
+	vScrollOffset int
+	// hScrollOffset is the first visible column in the viewport
+	hScrollOffset int
+	// stickyCol is the file column for vertical movement that gets "stuck"
+	stickyCol int
 
 	cfg *config.Config
 

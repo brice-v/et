@@ -1,8 +1,8 @@
 todo:
 
-- [ ] Fix horizontal movement (mostly viewport)
-- [ ] Fix vertical movement (should be able to move directly up a line and not clamp back to 0)
 - [ ] Macros, record into small buffer via event keys
     - [ ] replay macro by sending those keystrokes onto screen.EventQ()
 - [ ] should fallback to os.Stderr when log file failed to be created?
 - [x] main uses tcell.EventKey so things like KeyQ are not captured I think
+- [x] Fix horizontal movement (mostly viewport)
+- [x] Fix vertical movement (should be able to move directly up a line and not clamp back to 0)
