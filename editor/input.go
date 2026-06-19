@@ -7,6 +7,44 @@ import (
 	"github.com/gdamore/tcell/v3"
 )
 
+func fileToVisualCol(line []rune, fileCol int, tabWidth int) int {
+	col := 0
+	max := min(fileCol, len(line))
+	for i := range max {
+		if line[i] == '\t' {
+			col += tabWidth
+		} else {
+			col++
+		}
+	}
+	return col
+}
+
+func visualToFileCol(line []rune, visualCol int, tabWidth int) int {
+	col := 0
+	for fc := range line {
+		if col > visualCol {
+			return fc - 1
+		}
+		if line[fc] == '\t' {
+			col += tabWidth
+		} else {
+			col++
+		}
+	}
+	return len(line)
+}
+
+func (e *Editor) currentFileCol() int {
+	fileLine := e.vScrollOffset + e.cy
+	if fileLine < 0 || fileLine >= len(e.fileContentLines) {
+		return 0
+	}
+	line := e.fileContentLines[fileLine]
+	visualCol := fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth) + (e.cx - e.lPad)
+	return visualToFileCol(line, visualCol, e.cfg.TabWidth)
+}
+
 func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	keyAsRune := ""
 	key := k.Key()
@@ -41,33 +79,31 @@ func (e *Editor) handleMoveDown() {
 }
 
 func (e *Editor) handleMoveLeft() {
-	fc := (e.cx - e.lPad) + e.hScrollOffset
+	fc := e.currentFileCol()
 	fileLine := e.vScrollOffset + e.cy
 	if fc <= 0 && fileLine > 0 {
 		e.cy--
 		e.stickyCol = consts.StickyColMax
 	} else if fc > 0 {
-		e.cx--
-		e.stickyCol = (e.cx - e.lPad) + e.hScrollOffset
+		e.stickyCol = fc - 1
 	}
 }
 
 func (e *Editor) handleMoveRight() {
-	fc := (e.cx - e.lPad) + e.hScrollOffset
+	fc := e.currentFileCol()
 	fileLine := e.vScrollOffset + e.cy
 	if fileLine >= 0 && fileLine < len(e.fileContentLines) && fc >= len(e.fileContentLines[fileLine]) {
 		e.cy++
 		e.stickyCol = 0
 	} else {
-		e.cx++
-		e.stickyCol = (e.cx - e.lPad) + e.hScrollOffset
+		e.stickyCol = fc + 1
 	}
 }
 
 func (e *Editor) syncStickyCol() {
 	fileLine := e.vScrollOffset + e.cy
 	if fileLine >= 0 && fileLine < len(e.fileContentLines) {
-		e.stickyCol = (e.cx - e.lPad) + e.hScrollOffset
+		e.stickyCol = e.currentFileCol()
 	}
 }
 
@@ -86,25 +122,34 @@ func (e *Editor) clampCursor() {
 	if fileLine >= numLines {
 		fileLine = numLines - 1
 	}
-	lineLen := len(e.fileContentLines[fileLine])
+	line := e.fileContentLines[fileLine]
+	lineLen := len(line)
 
 	fc := max(min(e.stickyCol, lineLen), 0)
+
+	// Convert file column to visual column, accounting for tab expansion
+	vc := fileToVisualCol(line, fc, e.cfg.TabWidth)
+	scrollVisual := fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth)
 
 	// Adjust horizontal scroll to keep cursor visible on screen
 	textAreaWidth := e.sw - e.lPad
 	if textAreaWidth > 0 {
-		if fc >= textAreaWidth {
-			e.hScrollOffset = fc - (textAreaWidth - 1)
+		if vc >= scrollVisual+textAreaWidth {
+			targetVisual := vc - (textAreaWidth - 1)
+			e.hScrollOffset = visualToFileCol(line, targetVisual, e.cfg.TabWidth)
+			scrollVisual = fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth)
 		}
 	}
-	if fc < e.hScrollOffset {
+	if vc < scrollVisual {
 		e.hScrollOffset = fc
+		scrollVisual = fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth)
 	}
 	if e.hScrollOffset < 0 {
 		e.hScrollOffset = 0
+		scrollVisual = fileToVisualCol(line, 0, e.cfg.TabWidth)
 	}
 
-	e.cx = fc - e.hScrollOffset + e.lPad
+	e.cx = vc - scrollVisual + e.lPad
 }
 
 func (e *Editor) updateViewport() {
