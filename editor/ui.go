@@ -60,6 +60,18 @@ func (e *Editor) drawStatusBar() {
 		}
 		e.s.SetContent(i, statusBarH, ch, nil, statusStyle)
 	}
+
+	cursorLine := e.vScrollOffset + e.cy + 1
+	cursorCol := e.stickyCol + 1
+	posStr := fmt.Sprintf(" Ln %d, Col %d", cursorLine, cursorCol)
+	posX := max(e.sw-len(posStr), 0)
+	for i, ch := range posStr {
+		x := posX + i
+		if x >= e.sw {
+			break
+		}
+		e.s.SetContent(x, statusBarH, ch, nil, statusStyle)
+	}
 }
 
 func (e *Editor) drawLineNumbersOrTilde() {
