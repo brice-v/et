@@ -3,6 +3,10 @@ package editor
 import (
 	"et/consts"
 	"fmt"
+	"strings"
+	"text/scanner"
+
+	"github.com/gdamore/tcell/v3"
 )
 
 func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
@@ -30,6 +34,41 @@ func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
 	}
 }
 
+func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
+	hlMap := make(map[int]struct {
+		kw    string
+		style tcell.Style
+	})
+	var s scanner.Scanner
+	s.Init(strings.NewReader(string(line)))
+	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+		hls, ok := e.getHighlightStyle(s.TokenText())
+		if !ok {
+			continue
+		}
+		hlMap[s.Position.Column] = struct {
+			kw    string
+			style tcell.Style
+		}{
+			kw:    s.TokenText(),
+			style: *hls,
+		}
+	}
+	if len(hlMap) == 0 {
+		return
+	}
+	// TODO: Ignoring tabs for now
+	offset := e.lPad - 1
+	for kwOffset, kwAndStyle := range hlMap {
+		for i, ch := range kwAndStyle.kw {
+			e.s.SetContent(kwOffset+offset+i, lineNumberOnScreen, ch, nil, kwAndStyle.style)
+		}
+	}
+	// TODO: Implement
+	//  Tokenize, then match, then pick highlight and redraw content on line
+	// TODO: Handle string later
+}
+
 func (e *Editor) drawContent() {
 	numLines := len(e.fileContentLines)
 	for i := range e.sh - e.sbh {
@@ -39,6 +78,7 @@ func (e *Editor) drawContent() {
 			l = e.fileContentLines[fileLine]
 		}
 		e.drawLine(i, l)
+		e.updateLineHighlight(i, l)
 	}
 }
 

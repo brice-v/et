@@ -70,3 +70,7 @@ func FileExtensions() map[string]string {
 		"go": "go",
 	}
 }
+
+func DisableHighlighting() bool {
+	return false
+}

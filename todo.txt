@@ -1,5 +1,6 @@
 todo:
 
+- [ ] Missing highlight color for numbers
 - [ ] Allow movement keys to be configurable (if including "modes")
 - [ ] Macros, record into small buffer via event keys
     - [ ] replay macro by sending those keystrokes onto screen.EventQ()

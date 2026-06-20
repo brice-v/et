@@ -55,12 +55,13 @@ func (c *Config) GetQuitKeyBindingsAsStr() string {
 }
 
 type Config struct {
-	Colors          Colors            `json:"colors"`
-	KeyBindings     KeyBindings       `json:"keybindings"`
-	TabWidth        int               `json:"tab_width"`
-	LeftPadString   string            `json:"left_pad_string"`
-	ShowLineNumbers bool              `json:"show_line_numbers"`
-	FileExtensions  map[string]string `json:"file_extensions"`
+	Colors              Colors            `json:"colors"`
+	KeyBindings         KeyBindings       `json:"keybindings"`
+	TabWidth            int               `json:"tab_width"`
+	LeftPadString       string            `json:"left_pad_string"`
+	ShowLineNumbers     bool              `json:"show_line_numbers"`
+	FileExtensions      map[string]string `json:"file_extensions"`
+	DisableHighlighting bool              `json:"disable_highlighting"`
 }
 
 func NewDefault() *Config {
@@ -74,10 +75,11 @@ func NewDefault() *Config {
 		KeyBindings: KeyBindings{
 			Quit: makeKeysFromKeyBinding(defaults.KeyBindingsQuit()),
 		},
-		TabWidth:        defaults.TabWidth(),
-		LeftPadString:   "~",
-		ShowLineNumbers: true,
-		FileExtensions:  defaults.FileExtensions(),
+		TabWidth:            defaults.TabWidth(),
+		LeftPadString:       "~",
+		ShowLineNumbers:     true,
+		FileExtensions:      defaults.FileExtensions(),
+		DisableHighlighting: defaults.DisableHighlighting(),
 	}
 }
 
