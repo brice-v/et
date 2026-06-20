@@ -1,6 +1,12 @@
 todo:
 
-- [ ] Missing highlight color for numbers
+- [ ] Potentially use blue tokenizer/lexer, cant really use scanner
+    - strip it down to just idents, numbers, and strings
+    - when tabs are found, increment twOffset
+    - only column pos (the position in the line) is needed, and can add twOffset to it so dont need to recalc or do something else weird
+    - and idents could just use hldb (string would need to be handled on its own in there)
+- [ ] Missing highlight color for numbers, and comments
+- [ ] Add -d or -debug flags, when enabled, capture timing of all functions and record in the log
 - [ ] Allow movement keys to be configurable (if including "modes")
 - [ ] Macros, record into small buffer via event keys
     - [ ] replay macro by sending those keystrokes onto screen.EventQ()

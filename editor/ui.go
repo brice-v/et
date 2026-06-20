@@ -35,6 +35,9 @@ func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
 }
 
 func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
+	if e.cfg.DisableHighlighting {
+		return
+	}
 	hlMap := make(map[int]struct {
 		kw    string
 		style tcell.Style
