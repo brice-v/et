@@ -61,9 +61,19 @@ func (e *Editor) drawStatusBar() {
 		e.s.SetContent(i, statusBarH, ch, nil, statusStyle)
 	}
 
+	ft := ""
+	if e.fileContentLines != nil {
+		if e.fileExtension != "" {
+			if fileType, ok := e.cfg.FileExtensions[e.fileExtension]; ok {
+				ft = "[" + fileType + "]"
+			}
+		} else {
+			ft = "[unknown]"
+		}
+	}
 	cursorLine := e.vScrollOffset + e.cy + 1
 	cursorCol := e.stickyCol + 1
-	posStr := fmt.Sprintf(" Ln %d, Col %d", cursorLine, cursorCol)
+	posStr := fmt.Sprintf("%s Ln %d, Col %d", ft, cursorLine, cursorCol)
 	posX := max(e.sw-len(posStr), 0)
 	for i, ch := range posStr {
 		x := posX + i

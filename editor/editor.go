@@ -34,6 +34,7 @@ type Editor struct {
 
 	fileName         string
 	fileContentLines [][]rune
+	fileExtension    string
 
 	// Exit is a flag to trigger exit
 	Exit bool
@@ -42,6 +43,11 @@ type Editor struct {
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	fcl := getFileContent(fileName)
 	baseStyle := tcell.StyleDefault.Background(cfg.Colors.Background.Color).Foreground(cfg.Colors.Foreground.Color)
+	splitFilename := strings.Split(fileName, ".")
+	fileExtension := ""
+	if len(splitFilename) > 0 {
+		fileExtension = splitFilename[len(splitFilename)-1]
+	}
 	return &Editor{
 		s:                s,
 		sbh:              1,
@@ -49,6 +55,7 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 		cfg:              cfg,
 		fileName:         fileName,
 		fileContentLines: fcl,
+		fileExtension:    fileExtension,
 	}
 }
 
