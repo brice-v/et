@@ -72,9 +72,9 @@ func Parse(path string) (*Config, error) {
 	}
 	defer f.Close()
 
-	var cfg Config
-	if err := json.NewDecoder(f).Decode(&cfg); err != nil {
+	cfg := NewDefault()
+	if err := json.NewDecoder(f).Decode(cfg); err != nil {
 		return nil, err
 	}
-	return &cfg, nil
+	return cfg, nil
 }

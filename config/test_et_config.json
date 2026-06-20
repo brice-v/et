@@ -1,0 +1,13 @@
+{
+	"colors": {
+		"foreground": "white",
+		"background": "black",
+		"status_bar": "darkcyan"
+	},
+	"keybindings": {
+		"quit": ["ctrl+q", "q", "esc"]
+	},
+	"tab_width": 4,
+	"left_pad_string": "~",
+	"show_line_numbers": true
+}

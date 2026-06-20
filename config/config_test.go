@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/gdamore/tcell/v3"
@@ -202,6 +203,104 @@ func TestParseModifierKeyBindings(t *testing.T) {
 				t.Errorf("mod = %v, want %v", mod, tt.mod)
 			}
 		})
+	}
+}
+
+func TestParseFile(t *testing.T) {
+	cfg, err := Parse("test_et_config.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := NewDefault()
+
+	if cfg.Colors.Foreground.Color != want.Colors.Foreground.Color {
+		t.Errorf("Foreground = %v, want %v", cfg.Colors.Foreground, want.Colors.Foreground)
+	}
+	if cfg.Colors.Background.Color != want.Colors.Background.Color {
+		t.Errorf("Background = %v, want %v", cfg.Colors.Background, want.Colors.Background)
+	}
+	if cfg.Colors.StatusBar.Color != want.Colors.StatusBar.Color {
+		t.Errorf("StatusBar = %v, want %v", cfg.Colors.StatusBar, want.Colors.StatusBar)
+	}
+	if cfg.TabWidth != want.TabWidth {
+		t.Errorf("TabWidth = %d, want %d", cfg.TabWidth, want.TabWidth)
+	}
+	if cfg.LeftPadString != want.LeftPadString {
+		t.Errorf("LeftPadString = %q, want %q", cfg.LeftPadString, want.LeftPadString)
+	}
+	if cfg.ShowLineNumbers != want.ShowLineNumbers {
+		t.Errorf("ShowLineNumbers = %t, want %t", cfg.ShowLineNumbers, want.ShowLineNumbers)
+	}
+	if len(cfg.KeyBindings.Quit) != len(want.KeyBindings.Quit) {
+		t.Fatalf("len(Quit) = %d, want %d", len(cfg.KeyBindings.Quit), len(want.KeyBindings.Quit))
+	}
+	for i := range want.KeyBindings.Quit {
+		if cfg.KeyBindings.Quit[i].Key != want.KeyBindings.Quit[i].Key {
+			t.Errorf("Quit[%d].Key = %v, want %v", i, cfg.KeyBindings.Quit[i].Key, want.KeyBindings.Quit[i].Key)
+		}
+		if cfg.KeyBindings.Quit[i].Modifiers != want.KeyBindings.Quit[i].Modifiers {
+			t.Errorf("Quit[%d].Modifiers = %v, want %v", i, cfg.KeyBindings.Quit[i].Modifiers, want.KeyBindings.Quit[i].Modifiers)
+		}
+	}
+}
+
+func TestParseMinimalDefaults(t *testing.T) {
+	cfg, err := Parse("test_et_config_minimal.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := NewDefault()
+
+	if cfg.TabWidth != 2 {
+		t.Errorf("TabWidth = %d, want 2", cfg.TabWidth)
+	}
+	if cfg.ShowLineNumbers != false {
+		t.Errorf("ShowLineNumbers = %t, want false", cfg.ShowLineNumbers)
+	}
+	if cfg.Colors.Foreground.Color != want.Colors.Foreground.Color {
+		t.Errorf("Foreground = %v, want default %v", cfg.Colors.Foreground, want.Colors.Foreground)
+	}
+	if cfg.Colors.Background.Color != want.Colors.Background.Color {
+		t.Errorf("Background = %v, want default %v", cfg.Colors.Background, want.Colors.Background)
+	}
+	if cfg.Colors.StatusBar.Color != want.Colors.StatusBar.Color {
+		t.Errorf("StatusBar = %v, want default %v", cfg.Colors.StatusBar, want.Colors.StatusBar)
+	}
+	if cfg.LeftPadString != want.LeftPadString {
+		t.Errorf("LeftPadString = %q, want default %q", cfg.LeftPadString, want.LeftPadString)
+	}
+	if len(cfg.KeyBindings.Quit) != len(want.KeyBindings.Quit) {
+		t.Fatalf("len(Quit) = %d, want %d", len(cfg.KeyBindings.Quit), len(want.KeyBindings.Quit))
+	}
+	for i := range want.KeyBindings.Quit {
+		if cfg.KeyBindings.Quit[i].Key != want.KeyBindings.Quit[i].Key {
+			t.Errorf("Quit[%d].Key = %v, want default %v", i, cfg.KeyBindings.Quit[i].Key, want.KeyBindings.Quit[i].Key)
+		}
+		if cfg.KeyBindings.Quit[i].Modifiers != want.KeyBindings.Quit[i].Modifiers {
+			t.Errorf("Quit[%d].Modifiers = %v, want default %v", i, cfg.KeyBindings.Quit[i].Modifiers, want.KeyBindings.Quit[i].Modifiers)
+		}
+	}
+}
+
+func TestParseFileNotFound(t *testing.T) {
+	_, err := Parse("nonexistent.json")
+	if err == nil {
+		t.Fatal("expected error for non-existent file")
+	}
+}
+
+func TestParseInvalidJSON(t *testing.T) {
+	path := "test_invalid.json"
+	if err := os.WriteFile(path, []byte("{invalid}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(path)
+
+	_, err := Parse(path)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
 	}
 }
 
