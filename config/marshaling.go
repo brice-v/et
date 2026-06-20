@@ -115,3 +115,20 @@ func makeKeysFromKeyBinding(bindings []defaults.KeyBinding) []Key {
 	}
 	return keys
 }
+
+func makeColorMapFromDefaultsColorMap(colorMap map[string]defaults.ColorMap) map[string]ColorMap {
+	m := make(map[string]ColorMap)
+	for k, v := range colorMap {
+		m[k] = ColorMap{
+			Keywords1:    v.Keywords1,
+			Color1:       Color{v.Color1},
+			Keywords2:    v.Keywords2,
+			Color2:       Color{v.Color2},
+			Keywords3:    v.Keywords3,
+			Color3:       Color{v.Color3},
+			StringTokens: v.StringTokens,
+			ColorString:  Color{v.ColorString},
+		}
+	}
+	return m
+}

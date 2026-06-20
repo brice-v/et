@@ -13,7 +13,7 @@ func TestParseDefaultJSON(t *testing.T) {
 	jsonStr := `{
 		"colors": {
 			"foreground": "white",
-			"background": "black",
+			"background": "#2C2E39",
 			"status_bar": "darkcyan"
 		}
 	}`
@@ -57,6 +57,14 @@ func TestRoundTrip(t *testing.T) {
 	}
 	if cfg.Colors.StatusBar.Color != want.Colors.StatusBar.Color {
 		t.Errorf("StatusBar = %v, want %v", cfg.Colors.StatusBar, want.Colors.StatusBar)
+	}
+	if len(cfg.FileExtensions) != len(want.FileExtensions) {
+		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
+	}
+	for k, v := range want.FileExtensions {
+		if cfg.FileExtensions[k] != v {
+			t.Errorf("FileExtensions[%q] = %q, want %q", k, cfg.FileExtensions[k], v)
+		}
 	}
 }
 
@@ -243,6 +251,14 @@ func TestParseFile(t *testing.T) {
 			t.Errorf("Quit[%d].Modifiers = %v, want %v", i, cfg.KeyBindings.Quit[i].Modifiers, want.KeyBindings.Quit[i].Modifiers)
 		}
 	}
+	if len(cfg.FileExtensions) != len(want.FileExtensions) {
+		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
+	}
+	for k, v := range want.FileExtensions {
+		if cfg.FileExtensions[k] != v {
+			t.Errorf("FileExtensions[%q] = %q, want %q", k, cfg.FileExtensions[k], v)
+		}
+	}
 }
 
 func TestParseMinimalDefaults(t *testing.T) {
@@ -282,6 +298,14 @@ func TestParseMinimalDefaults(t *testing.T) {
 			t.Errorf("Quit[%d].Modifiers = %v, want default %v", i, cfg.KeyBindings.Quit[i].Modifiers, want.KeyBindings.Quit[i].Modifiers)
 		}
 	}
+	if len(cfg.FileExtensions) != len(want.FileExtensions) {
+		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
+	}
+	for k, v := range want.FileExtensions {
+		if cfg.FileExtensions[k] != v {
+			t.Errorf("FileExtensions[%q] = %q, want default %q", k, cfg.FileExtensions[k], v)
+		}
+	}
 }
 
 func TestParseFileNotFound(t *testing.T) {
@@ -301,6 +325,162 @@ func TestParseInvalidJSON(t *testing.T) {
 	_, err := Parse(path)
 	if err == nil {
 		t.Fatal("expected error for invalid JSON")
+	}
+}
+
+func TestColorMapJSON(t *testing.T) {
+	cm := ColorMap{
+		Keywords1:    []string{"func", "return"},
+		Color1:       Color{color.GetColor("red")},
+		Keywords2:    []string{"int", "string"},
+		Color2:       Color{color.GetColor("blue")},
+		Keywords3:    []string{"print"},
+		Color3:       Color{color.GetColor("green")},
+		StringTokens: []string{`"`, "'"},
+		ColorString:  Color{color.GetColor("yellow")},
+	}
+
+	got, err := json.Marshal(cm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var cm2 ColorMap
+	if err := json.Unmarshal(got, &cm2); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(cm2.Keywords1) != 2 || cm2.Keywords1[0] != "func" || cm2.Keywords1[1] != "return" {
+		t.Errorf("Keywords1 = %v, want [func return]", cm2.Keywords1)
+	}
+	if cm2.Color1.Color != color.GetColor("red") {
+		t.Errorf("Color1 = %v, want red", cm2.Color1)
+	}
+	if len(cm2.Keywords2) != 2 || cm2.Keywords2[0] != "int" || cm2.Keywords2[1] != "string" {
+		t.Errorf("Keywords2 = %v, want [int string]", cm2.Keywords2)
+	}
+	if cm2.Color2.Color != color.GetColor("blue") {
+		t.Errorf("Color2 = %v, want blue", cm2.Color2)
+	}
+	if len(cm2.Keywords3) != 1 || cm2.Keywords3[0] != "print" {
+		t.Errorf("Keywords3 = %v, want [print]", cm2.Keywords3)
+	}
+	if cm2.Color3.Color != color.GetColor("green") {
+		t.Errorf("Color3 = %v, want green", cm2.Color3)
+	}
+	if len(cm2.StringTokens) != 2 || cm2.StringTokens[0] != "\"" || cm2.StringTokens[1] != "'" {
+		t.Errorf("StringTokens = %v, want [\" ']", cm2.StringTokens)
+	}
+	if cm2.ColorString.Color != color.GetColor("yellow") {
+		t.Errorf("ColorString = %v, want yellow", cm2.ColorString)
+	}
+}
+
+func TestConfigWithLanguages(t *testing.T) {
+	jsonStr := `{
+		"colors": {
+			"foreground": "white",
+			"background": "black",
+			"status_bar": "darkcyan",
+			"languages": {
+				"go": {
+					"keywords1": ["func", "return"],
+					"color1": "red",
+					"keywords2": ["int", "string"],
+					"color2": "blue",
+					"keywords3": ["print"],
+					"color3": "green",
+					"string_tokens": ["\"", "'"],
+					"color_string": "yellow"
+				}
+			}
+		}
+	}`
+
+	var cfg Config
+	if err := json.Unmarshal([]byte(jsonStr), &cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if cfg.Colors.Foreground.Color != color.GetColor("white") {
+		t.Errorf("Foreground = %v, want white", cfg.Colors.Foreground)
+	}
+	if cfg.Colors.Background.Color != color.GetColor("black") {
+		t.Errorf("Background = %v, want black", cfg.Colors.Background)
+	}
+	if cfg.Colors.StatusBar.Color != color.GetColor("darkcyan") {
+		t.Errorf("StatusBar = %v, want darkcyan", cfg.Colors.StatusBar)
+	}
+
+	cm, ok := cfg.Colors.Languages["go"]
+	if !ok {
+		t.Fatal(`Languages["go"] not found`)
+	}
+
+	if len(cm.Keywords1) != 2 || cm.Keywords1[0] != "func" || cm.Keywords1[1] != "return" {
+		t.Errorf("Keywords1 = %v, want [func return]", cm.Keywords1)
+	}
+	if cm.Color1.Color != color.GetColor("red") {
+		t.Errorf("Color1 = %v, want red", cm.Color1)
+	}
+	if len(cm.Keywords2) != 2 || cm.Keywords2[0] != "int" || cm.Keywords2[1] != "string" {
+		t.Errorf("Keywords2 = %v, want [int string]", cm.Keywords2)
+	}
+	if cm.Color2.Color != color.GetColor("blue") {
+		t.Errorf("Color2 = %v, want blue", cm.Color2)
+	}
+	if len(cm.Keywords3) != 1 || cm.Keywords3[0] != "print" {
+		t.Errorf("Keywords3 = %v, want [print]", cm.Keywords3)
+	}
+	if cm.Color3.Color != color.GetColor("green") {
+		t.Errorf("Color3 = %v, want green", cm.Color3)
+	}
+	if len(cm.StringTokens) != 2 || cm.StringTokens[0] != "\"" || cm.StringTokens[1] != "'" {
+		t.Errorf("StringTokens = %v, want [\" ']", cm.StringTokens)
+	}
+	if cm.ColorString.Color != color.GetColor("yellow") {
+		t.Errorf("ColorString = %v, want yellow", cm.ColorString)
+	}
+}
+
+func TestFileExtensionsOverride(t *testing.T) {
+	jsonStr := `{
+		"file_extensions": {
+			"go": "go",
+			"py": "py"
+		}
+	}`
+
+	var cfg Config
+	if err := json.Unmarshal([]byte(jsonStr), &cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(cfg.FileExtensions) != 2 {
+		t.Fatalf("len(FileExtensions) = %d, want 2", len(cfg.FileExtensions))
+	}
+	if cfg.FileExtensions["go"] != "go" {
+		t.Errorf(`FileExtensions["go"] = %q, want "go"`, cfg.FileExtensions["go"])
+	}
+	if cfg.FileExtensions["py"] != "py" {
+		t.Errorf(`FileExtensions["py"] = %q, want "py"`, cfg.FileExtensions["py"])
+	}
+}
+
+func TestGetQuitKeyBindingsAsStr(t *testing.T) {
+	cfg := NewDefault()
+	got := cfg.GetQuitKeyBindingsAsStr()
+	want := "[ctrl+q,q,esc]"
+	if got != want {
+		t.Errorf("GetQuitKeyBindingsAsStr() = %q, want %q", got, want)
+	}
+}
+
+func TestColorUnmarshalJSONError(t *testing.T) {
+	var c Color
+	err := c.UnmarshalJSON([]byte(`123`))
+	if err == nil {
+		t.Error("expected error for non-string JSON value")
 	}
 }
 

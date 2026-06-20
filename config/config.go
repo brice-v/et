@@ -7,10 +7,22 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
 
 type Color struct {
-	tcell.Color
+	color.Color
+}
+
+type ColorMap struct {
+	Keywords1    []string `json:"keywords1"`
+	Color1       Color    `json:"color1"`
+	Keywords2    []string `json:"keywords2"`
+	Color2       Color    `json:"color2"`
+	Keywords3    []string `json:"keywords3"`
+	Color3       Color    `json:"color3"`
+	StringTokens []string `json:"string_tokens"`
+	ColorString  Color    `json:"color_string"`
 }
 
 type Key struct {
@@ -19,9 +31,10 @@ type Key struct {
 }
 
 type Colors struct {
-	Foreground Color `json:"foreground"`
-	Background Color `json:"background"`
-	StatusBar  Color `json:"status_bar"`
+	Foreground Color               `json:"foreground"`
+	Background Color               `json:"background"`
+	StatusBar  Color               `json:"status_bar"`
+	Languages  map[string]ColorMap `json:"languages"`
 }
 
 type KeyBindings struct {
@@ -42,11 +55,12 @@ func (c *Config) GetQuitKeyBindingsAsStr() string {
 }
 
 type Config struct {
-	Colors          Colors      `json:"colors"`
-	KeyBindings     KeyBindings `json:"keybindings"`
-	TabWidth        int         `json:"tab_width"`
-	LeftPadString   string      `json:"left_pad_string"`
-	ShowLineNumbers bool        `json:"show_line_numbers"`
+	Colors          Colors            `json:"colors"`
+	KeyBindings     KeyBindings       `json:"keybindings"`
+	TabWidth        int               `json:"tab_width"`
+	LeftPadString   string            `json:"left_pad_string"`
+	ShowLineNumbers bool              `json:"show_line_numbers"`
+	FileExtensions  map[string]string `json:"file_extensions"`
 }
 
 func NewDefault() *Config {
@@ -55,6 +69,7 @@ func NewDefault() *Config {
 			Foreground: Color{defaults.ColorForeground()},
 			Background: Color{defaults.ColorBackground()},
 			StatusBar:  Color{defaults.ColorStatusBar()},
+			Languages:  makeColorMapFromDefaultsColorMap(defaults.LanguagesColorMap()),
 		},
 		KeyBindings: KeyBindings{
 			Quit: makeKeysFromKeyBinding(defaults.KeyBindingsQuit()),
@@ -62,6 +77,7 @@ func NewDefault() *Config {
 		TabWidth:        defaults.TabWidth(),
 		LeftPadString:   "~",
 		ShowLineNumbers: true,
+		FileExtensions:  defaults.FileExtensions(),
 	}
 }
 
