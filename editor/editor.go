@@ -2,21 +2,12 @@ package editor
 
 import (
 	"et/config"
+	"et/consts"
 	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
-)
-
-type hlStyleType int
-
-const (
-	hlBase hlStyleType = iota
-	hl1
-	hl2
-	hl3
-	hlStr
 )
 
 type Editor struct {
@@ -35,7 +26,8 @@ type Editor struct {
 	hl3Style   tcell.Style
 	hlStrStyle tcell.Style
 	// highlight database, the keywords/tokens mapped to the corresponding color
-	hldb map[string]hlStyleType
+	hldb        map[string]consts.HlStyleType
+	hlOperators string
 
 	// cx, cy cursor x and y position
 	cx, cy int
@@ -95,35 +87,35 @@ func (e *Editor) setupHlStyles() {
 	e.hl2Style = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.Color2.Color)
 	e.hl3Style = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.Color3.Color)
 	e.hlStrStyle = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.ColorString.Color)
-	e.hldb = make(map[string]hlStyleType)
+	e.hldb = make(map[string]consts.HlStyleType)
 	for _, kw := range colorMap.Keywords1 {
-		e.hldb[kw] = hl1
+		e.hldb[kw] = consts.Hl1
 	}
 	for _, kw := range colorMap.Keywords2 {
-		e.hldb[kw] = hl2
+		e.hldb[kw] = consts.Hl2
 	}
 	for _, kw := range colorMap.Keywords3 {
-		e.hldb[kw] = hl3
+		e.hldb[kw] = consts.Hl3
 	}
 	for _, t := range colorMap.StringTokens {
-		e.hldb[t] = hlStr
+		e.hldb[t] = consts.HlStr
+	}
+	e.hlOperators = colorMap.Operators
+	for _, ch := range e.hlOperators {
+		e.hldb[string(ch)] = consts.Hl1
 	}
 }
 
-func (e *Editor) getHighlightStyle(s string) (*tcell.Style, bool) {
-	styleType, ok := e.hldb[s]
-	if !ok {
-		return nil, false
-	}
+func (e *Editor) getHighlightStyle(styleType consts.HlStyleType) (*tcell.Style, bool) {
 	var hlStyle *tcell.Style
 	switch styleType {
-	case hl1:
+	case consts.Hl1:
 		hlStyle = &e.hl1Style
-	case hl2:
+	case consts.Hl2:
 		hlStyle = &e.hl2Style
-	case hl3:
+	case consts.Hl3:
 		hlStyle = &e.hl3Style
-	case hlStr:
+	case consts.HlStr:
 		hlStyle = &e.hlStrStyle
 	}
 	return hlStyle, true

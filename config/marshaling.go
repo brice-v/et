@@ -128,6 +128,7 @@ func makeColorMapFromDefaultsColorMap(colorMap map[string]defaults.ColorMap) map
 			Color3:       Color{v.Color3},
 			StringTokens: v.StringTokens,
 			ColorString:  Color{v.ColorString},
+			Operators:    v.Operators,
 		}
 	}
 	return m

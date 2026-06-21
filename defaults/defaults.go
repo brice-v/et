@@ -44,6 +44,7 @@ type ColorMap struct {
 	Color3       color.Color
 	StringTokens []string
 	ColorString  color.Color
+	Operators    string
 }
 
 func LanguagesColorMap() map[string]ColorMap {
@@ -61,6 +62,8 @@ func LanguagesColorMap() map[string]ColorMap {
 			StringTokens: []string{"`", `"`, "'"},
 			// #d9e180
 			ColorString: color.NewRGBColor(217, 225, 128),
+
+			Operators: "+-*/!|^&%=~{}[]:",
 		},
 	}
 }

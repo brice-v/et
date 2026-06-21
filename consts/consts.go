@@ -16,3 +16,13 @@ var WelcomeMessages = [3]string{
 	welcomeMessageLine2,
 	welcomeMessageLine3,
 }
+
+type HlStyleType int
+
+const (
+	HlBase HlStyleType = iota
+	Hl1
+	Hl2
+	Hl3
+	HlStr
+)

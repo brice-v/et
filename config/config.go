@@ -23,6 +23,7 @@ type ColorMap struct {
 	Color3       Color    `json:"color3"`
 	StringTokens []string `json:"string_tokens"`
 	ColorString  Color    `json:"color_string"`
+	Operators    string   `json:"operators"`
 }
 
 type Key struct {

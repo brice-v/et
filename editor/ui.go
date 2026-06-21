@@ -2,11 +2,8 @@ package editor
 
 import (
 	"et/consts"
+	"et/lexer"
 	"fmt"
-	"strings"
-	"text/scanner"
-
-	"github.com/gdamore/tcell/v3"
 )
 
 func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
@@ -38,33 +35,22 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 	if e.cfg.DisableHighlighting {
 		return
 	}
-	hlMap := make(map[int]struct {
-		kw    string
-		style tcell.Style
-	})
-	var s scanner.Scanner
-	s.Init(strings.NewReader(string(line)))
-	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-		hls, ok := e.getHighlightStyle(s.TokenText())
-		if !ok {
-			continue
-		}
-		hlMap[s.Position.Column] = struct {
-			kw    string
-			style tcell.Style
-		}{
-			kw:    s.TokenText(),
-			style: *hls,
-		}
-	}
-	if len(hlMap) == 0 {
-		return
-	}
-	// TODO: Ignoring tabs for now
 	offset := e.lPad - 1
-	for kwOffset, kwAndStyle := range hlMap {
-		for i, ch := range kwAndStyle.kw {
-			e.s.SetContent(kwOffset+offset+i, lineNumberOnScreen, ch, nil, kwAndStyle.style)
+	l := lexer.New(line, e.hldb, e.hlOperators)
+	for tok := l.NextToken(); tok.Type != lexer.TTEof; tok = l.NextToken() {
+		switch tok.Type {
+		case lexer.TTIdent:
+			hlStyle, ok := e.getHighlightStyle(tok.HlStyleType)
+			if !ok {
+				continue
+			}
+			twOffset := 0
+			if l.TabCount != 0 {
+				twOffset = l.TabCount*e.cfg.TabWidth - l.TabCount
+			}
+			for i, ch := range tok.Literal {
+				e.s.SetContent(tok.Position+offset+twOffset+i, lineNumberOnScreen, ch, nil, *hlStyle)
+			}
 		}
 	}
 	// TODO: Implement
