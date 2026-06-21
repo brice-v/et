@@ -4,6 +4,7 @@ import (
 	"et/consts"
 	"et/lexer"
 	"fmt"
+	"log/slog"
 )
 
 func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
@@ -39,9 +40,13 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 	l := lexer.New(line, e.hldb, e.hlOperators)
 	for tok := l.NextToken(); tok.Type != lexer.TTEof; tok = l.NextToken() {
 		switch tok.Type {
-		case lexer.TTIdent:
+		case lexer.TTIdent, lexer.TTString:
 			hlStyle, ok := e.getHighlightStyle(tok.HlStyleType)
 			if !ok {
+				continue
+			}
+			if hlStyle == nil {
+				slog.Warn("hlStyle is nil for token", "tok", tok)
 				continue
 			}
 			twOffset := 0

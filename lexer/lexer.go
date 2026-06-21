@@ -351,6 +351,7 @@ func (l *Lexer) NextToken() Token {
 		tok.Literal = ""
 		tok.Type = TTEof
 	case '"':
+		tok.Position = l.posInLine
 		if l.peekChar() == '"' && l.peekSecondChar() == '"' {
 			tok.Position = l.posInLine
 			str := l.readRawString()
@@ -365,9 +366,9 @@ func (l *Lexer) NextToken() Token {
 					Position: l.posInLine,
 				}
 			} else {
-				tok.Position = l.posInLine
+				tok.HlStyleType = consts.HlStr
 				tok.Type = TTString
-				tok.Literal = str
+				tok.Literal = fmt.Sprintf("%q", str)
 			}
 		}
 	case '\'':

@@ -6,7 +6,7 @@ import (
 )
 
 func DefaultColorBackground() Color {
-	return Color{color.NewRGBColor(44, 46, 57)}
+	return Color{color.NewRGBColor(40, 42, 53)}
 }
 
 func DefaultColorForeground() Color {
@@ -43,11 +43,11 @@ func DefaultLanguagesColorMap() map[string]ColorMap {
 			Keywords1:    []string{"break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"},
 			Color1:       Color{Color: color.NewRGBColor(255, 120, 197)},
 			Keywords2:    []string{"uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64", "float32", "float64", "complex64", "complex128", "byte", "rune", "uint", "int", "uintptr", "error"},
-			Color2:       Color{Color: color.NewRGBColor(135, 225, 246)},
+			Color2:       Color{Color: color.NewRGBColor(161, 231, 250)},
 			Keywords3:    []string{"print", "println", "make", "append", "len", "copy", "panic", "recover", "min", "max", "clear", "delete", "real", "imag", "new", "init"},
-			Color3:       Color{Color: color.NewRGBColor(74, 211, 109)},
+			Color3:       Color{Color: color.NewRGBColor(134, 247, 137)},
 			StringTokens: []string{"`", `"`, "'"},
-			ColorString:  Color{Color: color.NewRGBColor(217, 225, 128)},
+			ColorString:  Color{Color: color.NewRGBColor(243, 250, 154)},
 			Operators:    "+-*/!|^&%=~{}[]:",
 		},
 	}
