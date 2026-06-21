@@ -338,6 +338,7 @@ func TestColorMapJSON(t *testing.T) {
 		Color3:       Color{color.GetColor("green")},
 		StringTokens: []string{`"`, "'"},
 		ColorString:  Color{color.GetColor("yellow")},
+		Operators:    "+-*/",
 	}
 
 	got, err := json.Marshal(cm)
@@ -374,6 +375,9 @@ func TestColorMapJSON(t *testing.T) {
 	if cm2.ColorString.Color != color.GetColor("yellow") {
 		t.Errorf("ColorString = %v, want yellow", cm2.ColorString)
 	}
+	if cm2.Operators != "+-*/" {
+		t.Errorf("Operators = %q, want \"+-*/\"", cm2.Operators)
+	}
 }
 
 func TestConfigWithLanguages(t *testing.T) {
@@ -391,7 +395,8 @@ func TestConfigWithLanguages(t *testing.T) {
 					"keywords3": ["print"],
 					"color3": "green",
 					"string_tokens": ["\"", "'"],
-					"color_string": "yellow"
+					"color_string": "yellow",
+					"operators": "+-*/"
 				}
 			}
 		}
@@ -441,6 +446,9 @@ func TestConfigWithLanguages(t *testing.T) {
 	if cm.ColorString.Color != color.GetColor("yellow") {
 		t.Errorf("ColorString = %v, want yellow", cm.ColorString)
 	}
+	if cm.Operators != "+-*/" {
+		t.Errorf("Operators = %q, want \"+-*/\"", cm.Operators)
+	}
 }
 
 func TestFileExtensionsOverride(t *testing.T) {
@@ -464,6 +472,34 @@ func TestFileExtensionsOverride(t *testing.T) {
 	}
 	if cfg.FileExtensions["py"] != "py" {
 		t.Errorf(`FileExtensions["py"] = %q, want "py"`, cfg.FileExtensions["py"])
+	}
+}
+
+func TestDisableHighlighting(t *testing.T) {
+	cfg := NewDefault()
+	if cfg.DisableHighlighting != false {
+		t.Errorf("DisableHighlighting = %t, want false", cfg.DisableHighlighting)
+	}
+
+	jsonStr := `{"disable_highlighting": true}`
+	var cfg2 Config
+	if err := json.Unmarshal([]byte(jsonStr), &cfg2); err != nil {
+		t.Fatal(err)
+	}
+	if cfg2.DisableHighlighting != true {
+		t.Errorf("DisableHighlighting = %t, want true", cfg2.DisableHighlighting)
+	}
+
+	got, err := json.Marshal(cfg2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cfg3 Config
+	if err := json.Unmarshal(got, &cfg3); err != nil {
+		t.Fatal(err)
+	}
+	if cfg3.DisableHighlighting != true {
+		t.Errorf("after round-trip DisableHighlighting = %t, want true", cfg3.DisableHighlighting)
 	}
 }
 

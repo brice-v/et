@@ -2,13 +2,17 @@ package config
 
 import (
 	"encoding/json"
-	"et/defaults"
 	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
 )
+
+type Key struct {
+	tcell.Key
+	Modifiers tcell.ModMask
+}
 
 type Color struct {
 	color.Color
@@ -24,11 +28,6 @@ type ColorMap struct {
 	StringTokens []string `json:"string_tokens"`
 	ColorString  Color    `json:"color_string"`
 	Operators    string   `json:"operators"`
-}
-
-type Key struct {
-	tcell.Key
-	Modifiers tcell.ModMask
 }
 
 type Colors struct {
@@ -68,19 +67,19 @@ type Config struct {
 func NewDefault() *Config {
 	return &Config{
 		Colors: Colors{
-			Foreground: Color{defaults.ColorForeground()},
-			Background: Color{defaults.ColorBackground()},
-			StatusBar:  Color{defaults.ColorStatusBar()},
-			Languages:  makeColorMapFromDefaultsColorMap(defaults.LanguagesColorMap()),
+			Foreground: DefaultColorForeground(),
+			Background: DefaultColorBackground(),
+			StatusBar:  DefaultColorStatusBar(),
+			Languages:  DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
-			Quit: makeKeysFromKeyBinding(defaults.KeyBindingsQuit()),
+			Quit: DefaultKeyBindingsQuit(),
 		},
-		TabWidth:            defaults.TabWidth(),
-		LeftPadString:       "~",
-		ShowLineNumbers:     true,
-		FileExtensions:      defaults.FileExtensions(),
-		DisableHighlighting: defaults.DisableHighlighting(),
+		TabWidth:            DefaultTabWidth(),
+		LeftPadString:       DefaultLeftPadString(),
+		ShowLineNumbers:     DefaultShowLineNumbers(),
+		FileExtensions:      DefaultFileExtensions(),
+		DisableHighlighting: DefaultDisableHighlighting(),
 	}
 }
 

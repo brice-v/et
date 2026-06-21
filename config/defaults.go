@@ -1,0 +1,64 @@
+package config
+
+import (
+	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
+)
+
+func DefaultColorBackground() Color {
+	return Color{color.NewRGBColor(44, 46, 57)}
+}
+
+func DefaultColorForeground() Color {
+	return Color{color.White}
+}
+
+func DefaultColorStatusBar() Color {
+	return Color{color.DarkCyan}
+}
+
+func DefaultTabWidth() int {
+	return 4
+}
+
+func DefaultLeftPadString() string {
+	return "~"
+}
+
+func DefaultShowLineNumbers() bool {
+	return true
+}
+
+func DefaultKeyBindingsQuit() []Key {
+	return []Key{
+		{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl},
+		{Key: tcell.KeyQ, Modifiers: tcell.ModNone},
+		{Key: tcell.KeyEscape, Modifiers: tcell.ModNone},
+	}
+}
+
+func DefaultLanguagesColorMap() map[string]ColorMap {
+	return map[string]ColorMap{
+		"go": {
+			Keywords1:    []string{"break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"},
+			Color1:       Color{Color: color.NewRGBColor(255, 120, 197)},
+			Keywords2:    []string{"uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64", "float32", "float64", "complex64", "complex128", "byte", "rune", "uint", "int", "uintptr", "error"},
+			Color2:       Color{Color: color.NewRGBColor(135, 225, 246)},
+			Keywords3:    []string{"print", "println", "make", "append", "len", "copy", "panic", "recover", "min", "max", "clear", "delete", "real", "imag", "new", "init"},
+			Color3:       Color{Color: color.NewRGBColor(74, 211, 109)},
+			StringTokens: []string{"`", `"`, "'"},
+			ColorString:  Color{Color: color.NewRGBColor(217, 225, 128)},
+			Operators:    "+-*/!|^&%=~{}[]:",
+		},
+	}
+}
+
+func DefaultFileExtensions() map[string]string {
+	return map[string]string{
+		"go": "go",
+	}
+}
+
+func DefaultDisableHighlighting() bool {
+	return false
+}

@@ -122,7 +122,7 @@ func (e *Editor) drawLineNumbersOrTilde() {
 		// +2 so that other things using this allow for extra padding to the right
 		e.lPad = len([]rune(maxLinesAsStr)) + 2
 	} else {
-		e.lPad = len(ch)
+		e.lPad = len(ch) + 1
 	}
 	for y := range e.sh - e.sbh {
 		if useLineNums {

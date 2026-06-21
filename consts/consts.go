@@ -1,6 +1,8 @@
 package consts
 
-import "math"
+import (
+	"math"
+)
 
 const (
 	LogFileName         = "et.log"
