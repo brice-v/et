@@ -13,7 +13,7 @@ func TestParseDefaultJSON(t *testing.T) {
 	jsonStr := `{
 		"colors": {
 			"foreground": "white",
-			"background": "#2C2E39",
+			"background": "#282A35",
 			"status_bar": "darkcyan"
 		}
 	}`
@@ -327,18 +327,23 @@ func TestParseInvalidJSON(t *testing.T) {
 		t.Fatal("expected error for invalid JSON")
 	}
 }
-
 func TestColorMapJSON(t *testing.T) {
 	cm := ColorMap{
-		Keywords1:    []string{"func", "return"},
-		Color1:       Color{color.GetColor("red")},
-		Keywords2:    []string{"int", "string"},
-		Color2:       Color{color.GetColor("blue")},
-		Keywords3:    []string{"print"},
-		Color3:       Color{color.GetColor("green")},
-		StringTokens: []string{`"`, "'"},
-		ColorString:  Color{color.GetColor("yellow")},
-		Operators:    "+-*/",
+		Keywords1:              []string{"func", "return"},
+		Color1:                 Color{color.GetColor("red")},
+		Keywords2:              []string{"int", "string"},
+		Color2:                 Color{color.GetColor("blue")},
+		Keywords3:              []string{"print"},
+		Color3:                 Color{color.GetColor("green")},
+		StringTokens:           []string{`"`, "'"},
+		MultiLineStringToken:   "'''",
+		ColorString:            Color{color.GetColor("yellow")},
+		Operators:              "+-*/",
+		SpecialTokens:          []string{"nil", "self"},
+		SpecialColor:           Color{color.GetColor("purple")},
+		CommentToken:           "#",
+		MultiLineCommentTokens: []string{"#{", "#}"},
+		CommentColor:           Color{color.GetColor("gray")},
 	}
 
 	got, err := json.Marshal(cm)
@@ -372,11 +377,29 @@ func TestColorMapJSON(t *testing.T) {
 	if len(cm2.StringTokens) != 2 || cm2.StringTokens[0] != "\"" || cm2.StringTokens[1] != "'" {
 		t.Errorf("StringTokens = %v, want [\" ']", cm2.StringTokens)
 	}
+	if cm2.MultiLineStringToken != "'''" {
+		t.Errorf("MultiLineStringToken = %q, want \"'''\"", cm2.MultiLineStringToken)
+	}
 	if cm2.ColorString.Color != color.GetColor("yellow") {
 		t.Errorf("ColorString = %v, want yellow", cm2.ColorString)
 	}
 	if cm2.Operators != "+-*/" {
 		t.Errorf("Operators = %q, want \"+-*/\"", cm2.Operators)
+	}
+	if len(cm2.SpecialTokens) != 2 || cm2.SpecialTokens[0] != "nil" || cm2.SpecialTokens[1] != "self" {
+		t.Errorf("SpecialTokens = %v, want [nil self]", cm2.SpecialTokens)
+	}
+	if cm2.SpecialColor.Color != color.GetColor("purple") {
+		t.Errorf("SpecialColor = %v, want purple", cm2.SpecialColor)
+	}
+	if cm2.CommentToken != "#" {
+		t.Errorf("CommentToken = %q, want \"#\"", cm2.CommentToken)
+	}
+	if len(cm2.MultiLineCommentTokens) != 2 || cm2.MultiLineCommentTokens[0] != "#{" || cm2.MultiLineCommentTokens[1] != "#}" {
+		t.Errorf("MultiLineCommentTokens = %v, want [#{ #}]", cm2.MultiLineCommentTokens)
+	}
+	if cm2.CommentColor.Color != color.GetColor("gray") {
+		t.Errorf("CommentColor = %v, want gray", cm2.CommentColor)
 	}
 }
 
@@ -395,8 +418,14 @@ func TestConfigWithLanguages(t *testing.T) {
 					"keywords3": ["print"],
 					"color3": "green",
 					"string_tokens": ["\"", "'"],
+					"multi_line_string_token": "'''",
 					"color_string": "yellow",
-					"operators": "+-*/"
+					"operators": "+-*/",
+					"special_tokens": ["nil", "self"],
+					"special_color": "purple",
+					"comment_token": "#",
+					"multi_line_comment_token": ["#{", "#}"],
+					"comment_color": "gray"
 				}
 			}
 		}
@@ -443,11 +472,29 @@ func TestConfigWithLanguages(t *testing.T) {
 	if len(cm.StringTokens) != 2 || cm.StringTokens[0] != "\"" || cm.StringTokens[1] != "'" {
 		t.Errorf("StringTokens = %v, want [\" ']", cm.StringTokens)
 	}
+	if cm.MultiLineStringToken != "'''" {
+		t.Errorf("MultiLineStringToken = %q, want \"'''\"", cm.MultiLineStringToken)
+	}
 	if cm.ColorString.Color != color.GetColor("yellow") {
 		t.Errorf("ColorString = %v, want yellow", cm.ColorString)
 	}
 	if cm.Operators != "+-*/" {
 		t.Errorf("Operators = %q, want \"+-*/\"", cm.Operators)
+	}
+	if len(cm.SpecialTokens) != 2 || cm.SpecialTokens[0] != "nil" || cm.SpecialTokens[1] != "self" {
+		t.Errorf("SpecialTokens = %v, want [nil self]", cm.SpecialTokens)
+	}
+	if cm.SpecialColor.Color != color.GetColor("purple") {
+		t.Errorf("SpecialColor = %v, want purple", cm.SpecialColor)
+	}
+	if cm.CommentToken != "#" {
+		t.Errorf("CommentToken = %q, want \"#\"", cm.CommentToken)
+	}
+	if len(cm.MultiLineCommentTokens) != 2 || cm.MultiLineCommentTokens[0] != "#{" || cm.MultiLineCommentTokens[1] != "#}" {
+		t.Errorf("MultiLineCommentTokens = %v, want [#{ #}]", cm.MultiLineCommentTokens)
+	}
+	if cm.CommentColor.Color != color.GetColor("gray") {
+		t.Errorf("CommentColor = %v, want gray", cm.CommentColor)
 	}
 }
 

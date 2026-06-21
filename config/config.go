@@ -19,15 +19,22 @@ type Color struct {
 }
 
 type ColorMap struct {
-	Keywords1    []string `json:"keywords1"`
-	Color1       Color    `json:"color1"`
-	Keywords2    []string `json:"keywords2"`
-	Color2       Color    `json:"color2"`
-	Keywords3    []string `json:"keywords3"`
-	Color3       Color    `json:"color3"`
-	StringTokens []string `json:"string_tokens"`
-	ColorString  Color    `json:"color_string"`
-	Operators    string   `json:"operators"`
+	Keywords1            []string `json:"keywords1"`
+	Color1               Color    `json:"color1"`
+	Keywords2            []string `json:"keywords2"`
+	Color2               Color    `json:"color2"`
+	Keywords3            []string `json:"keywords3"`
+	Color3               Color    `json:"color3"`
+	StringTokens         []string `json:"string_tokens"`
+	MultiLineStringToken string   `json:"multi_line_string_token"`
+	ColorString          Color    `json:"color_string"`
+	Operators            string   `json:"operators"`
+	SpecialTokens        []string `json:"special_tokens"`
+	SpecialColor         Color    `json:"special_color"`
+	CommentToken         string   `json:"comment_token"`
+	// Begin and End Token only supported
+	MultiLineCommentTokens []string `json:"multi_line_comment_token"`
+	CommentColor           Color    `json:"comment_color"`
 }
 
 type Colors struct {

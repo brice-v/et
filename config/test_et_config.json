@@ -1,18 +1,24 @@
 {
 	"colors": {
 		"foreground": "white",
-		"background": "#2C2E39",
+		"background": "#282A35",
 		"status_bar": "darkcyan",
 		"languages": {
 			"go": {
 				"keywords1": ["break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"],
 				"color1": "#ff78c5",
 				"keywords2": ["uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64", "float32", "float64", "complex64", "complex128", "byte", "rune", "uint", "int", "uintptr", "error"],
-				"color2": "#87e1f6",
+				"color2": "#a1e7fa",
 				"keywords3": ["print", "println", "make", "append", "len", "copy", "panic", "recover", "min", "max", "clear", "delete", "real", "imag", "new", "init"],
-				"color3": "#4ad36d",
+				"color3": "#86f789",
 				"string_tokens": ["`", "\"", "'"],
-				"color_string": "#d9e180"
+				"color_string": "#f3fa9a",
+				"operators": "+-*/!|^&%=~{}[]:",
+				"special_tokens": ["nil", "(", ")"],
+				"special_color": "#b795f3",
+				"comment_token": "//",
+				"multi_line_comment_token": ["/*", "*/"],
+				"comment_color": "#6572a0"
 			}
 		}
 	},

@@ -49,6 +49,13 @@ func DefaultLanguagesColorMap() map[string]ColorMap {
 			StringTokens: []string{"`", `"`, "'"},
 			ColorString:  Color{Color: color.NewRGBColor(243, 250, 154)},
 			Operators:    "+-*/!|^&%=~{}[]:",
+			// Percentage formatting should also go here, but probably only if its in a string
+			SpecialTokens: []string{"nil", "(", ")"},
+			// Numbers use Special Color as well
+			SpecialColor:           Color{Color: color.NewRGBColor(183, 149, 243)},
+			CommentToken:           "//",
+			MultiLineCommentTokens: []string{"/*", "*/"},
+			CommentColor:           Color{Color: color.NewRGBColor(101, 114, 160)},
 		},
 	}
 }
