@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"et/consts"
 	"fmt"
-	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -318,7 +317,6 @@ func (l *Lexer) isWs(ch rune) bool {
 }
 
 func (l *Lexer) isOperator(ch rune) bool {
-	log.Printf("operators = %s", l.operators)
 	for _, c := range l.operators {
 		if c == ch {
 			return true
@@ -424,18 +422,6 @@ func (l *Lexer) NextToken() Token {
 // 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 func isLetter(ch rune) bool {
 	return unicode.IsLetter(rune(ch)) || ch == '_'
-}
-
-// isImportChar will return true if the rune given is allowed as part of an import path
-//
-// Note: numbers are not allowed in the filename because they are not allowed in identifiers
-// this is a design decision and prevents issues.  The reason why '.' is allowed is because
-// that will signifiy the path separation in the import path.
-//
-// We could just use a basic string which would solve most of these problems but i like
-// the look of python's import syntax :)
-func isImportChar(ch rune) bool {
-	return isLetter(ch) || ch == '.'
 }
 
 // isDigit will return true if the rune give is 0-9 or any unicode Digit
