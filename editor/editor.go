@@ -25,6 +25,7 @@ type Editor struct {
 	hl2Style   tcell.Style
 	hl3Style   tcell.Style
 	hlStrStyle tcell.Style
+	hlSpcStyle tcell.Style
 	// highlight database, the keywords/tokens mapped to the corresponding color
 	hldb        map[string]consts.HlStyleType
 	hlOperators string
@@ -87,6 +88,7 @@ func (e *Editor) setupHlStyles() {
 	e.hl2Style = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.Color2.Color)
 	e.hl3Style = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.Color3.Color)
 	e.hlStrStyle = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.ColorString.Color)
+	e.hlSpcStyle = tcell.StyleDefault.Background(e.cfg.Colors.Background.Color).Foreground(colorMap.SpecialColor.Color)
 	e.hldb = make(map[string]consts.HlStyleType)
 	for _, kw := range colorMap.Keywords1 {
 		e.hldb[kw] = consts.Hl1
@@ -99,6 +101,9 @@ func (e *Editor) setupHlStyles() {
 	}
 	for _, t := range colorMap.StringTokens {
 		e.hldb[t] = consts.HlStr
+	}
+	for _, t := range colorMap.SpecialTokens {
+		e.hldb[t] = consts.HlSpecial
 	}
 	e.hlOperators = colorMap.Operators
 	for _, ch := range e.hlOperators {
@@ -117,6 +122,8 @@ func (e *Editor) getHighlightStyle(styleType consts.HlStyleType) (*tcell.Style, 
 		hlStyle = &e.hl3Style
 	case consts.HlStr:
 		hlStyle = &e.hlStrStyle
+	case consts.HlSpecial:
+		hlStyle = &e.hlSpcStyle
 	}
 	return hlStyle, true
 }

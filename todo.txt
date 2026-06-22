@@ -1,5 +1,6 @@
 todo:
 
+- [ ] gnome terminal with color scheme makes white show up as orange?
 - [ ] Potentially use blue tokenizer/lexer, cant really use scanner
     - strip it down to just idents, numbers, and strings
     - when tabs are found, increment twOffset

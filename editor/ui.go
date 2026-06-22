@@ -40,7 +40,7 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 	l := lexer.New(line, e.hldb, e.hlOperators)
 	for tok := l.NextToken(); tok.Type != lexer.TTEof; tok = l.NextToken() {
 		switch tok.Type {
-		case lexer.TTIdent, lexer.TTString:
+		case lexer.TTIdent, lexer.TTString, lexer.TTNumber:
 			hlStyle, ok := e.getHighlightStyle(tok.HlStyleType)
 			if !ok {
 				continue

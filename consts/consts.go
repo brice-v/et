@@ -27,4 +27,5 @@ const (
 	Hl2
 	Hl3
 	HlStr
+	HlSpecial
 )

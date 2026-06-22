@@ -197,7 +197,6 @@ func (l *Lexer) readMultiLineComment() {
 			l.readChar()
 			l.readChar()
 			l.readChar()
-			// fmt.Println(l.ch)
 			break
 		}
 		l.readChar()
@@ -399,7 +398,7 @@ func (l *Lexer) NextToken() Token {
 		} else if isDigit(l.ch) {
 			tok.Position = l.posInLine
 			tok.Type, tok.Literal = l.readNumber()
-			// TODO: Will panic because no style for number at the moment
+			tok.HlStyleType = consts.HlSpecial
 			return tok
 		} else if l.isOperator(l.ch) {
 			tok.Position = l.posInLine
