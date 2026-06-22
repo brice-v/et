@@ -23,12 +23,15 @@ func fileToVisualCol(line []rune, fileCol int, tabWidth int) int {
 func visualToFileCol(line []rune, visualCol int, tabWidth int) int {
 	col := 0
 	for fc := range line {
-		if col > visualCol {
-			return fc - 1
-		}
 		if line[fc] == '\t' {
+			if visualCol < col+tabWidth {
+				return fc
+			}
 			col += tabWidth
 		} else {
+			if col >= visualCol {
+				return fc
+			}
 			col++
 		}
 	}
