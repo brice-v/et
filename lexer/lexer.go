@@ -177,14 +177,14 @@ func (l *Lexer) readNumber() (TokenType, string) {
 
 // readIdentifier will keep consuming valid letters out of the input according to `isLetter`
 // and return the string
-func (l *Lexer) readIdentifier() string {
+func (l *Lexer) readIdentifier() (string, bool) {
 	position := l.position
 	// Note: We can only do this because we check if the first char is a 'letter'
 	// That includes underscores which is why 1 of the lexer tests changes to accomodate that
 	for isLetter(l.ch) || unicode.IsNumber(l.ch) || l.ch == '?' || l.ch == '!' {
 		l.readChar()
 	}
-	return string(l.input[position:l.position])
+	return string(l.input[position:l.position]), l.ch == '('
 }
 
 // readMultiLineComment will continue to consume input until the end multiline token is reached
@@ -386,13 +386,22 @@ func (l *Lexer) NextToken() Token {
 	default:
 		if isLetter(l.ch) {
 			tok.Position = l.posInLine
-			tok.Literal = l.readIdentifier()
+			lit, isCall := l.readIdentifier()
+			tok.Literal = lit
 			hlStyle, ok := l.LookupIdent(tok.Literal)
+			tok.Type = TTIdent
 			if ok {
-				tok.Type = TTIdent
-				tok.HlStyleType = hlStyle
+				if isCall {
+					tok.HlStyleType = consts.Hl3
+				} else {
+					tok.HlStyleType = hlStyle
+				}
 			} else {
-				tok.Type = TTIllegal
+				if isCall {
+					tok.HlStyleType = consts.Hl3
+				} else {
+					tok.Type = TTIllegal
+				}
 			}
 			return tok
 		} else if isDigit(l.ch) {
