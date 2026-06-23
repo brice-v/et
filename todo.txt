@@ -1,5 +1,6 @@
 todo:
 
+- [ ] integrate with tcell terminal (something like this https://git.sr.ht/~rockorager/tcell-term, embed it directly)
 - [ ] gnome terminal with color scheme makes white show up as orange?
 - [ ] Potentially use blue tokenizer/lexer, cant really use scanner
     - strip it down to just idents, numbers, and strings
