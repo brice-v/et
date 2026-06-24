@@ -4,7 +4,6 @@ import (
 	"et/consts"
 	"et/lexer"
 	"fmt"
-	"log/slog"
 )
 
 func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
@@ -33,29 +32,25 @@ func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
 }
 
 func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
-	if e.cfg.DisableHighlighting {
+	if e.cfg.DisableHighlighting || e.hl == nil {
 		return
 	}
 	offset := e.lPad - 1
-	l := lexer.New(line, e.hldb, e.hlOperators, e.commentToken, e.stringTokens)
+	l := e.hl.newLexer(line)
 	for tok := l.NextToken(); tok.Type != lexer.TTEof; tok = l.NextToken() {
-		switch tok.Type {
-		case lexer.TTIdent, lexer.TTString, lexer.TTNumber, lexer.TTComment:
-			hlStyle, ok := e.getHighlightStyle(tok.HlStyleType)
-			if !ok {
-				continue
-			}
-			if hlStyle == nil {
-				slog.Warn("hlStyle is nil for token", "tok", tok)
-				continue
-			}
-			twOffset := 0
-			if l.TabCount != 0 {
-				twOffset = l.TabCount*e.cfg.TabWidth - l.TabCount
-			}
-			for i, ch := range tok.Literal {
-				e.s.SetContent(tok.Position+offset+twOffset+i, lineNumberOnScreen, ch, nil, *hlStyle)
-			}
+		if tok.Type == lexer.TTIllegal {
+			continue
+		}
+		hlStyle := e.hl.getStyle(tok.HlStyleType)
+		if hlStyle == nil {
+			continue
+		}
+		twOffset := 0
+		if l.TabCount != 0 {
+			twOffset = l.TabCount*e.cfg.TabWidth - l.TabCount
+		}
+		for i, ch := range tok.Literal {
+			e.s.SetContent(tok.Position+offset+twOffset+i, lineNumberOnScreen, ch, nil, *hlStyle)
 		}
 	}
 }

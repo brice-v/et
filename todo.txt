@@ -1,14 +1,8 @@
 todo:
 
+- [ ] eventually figure out ml comment and string highlighting
 - [ ] integrate with tcell terminal (something like this https://git.sr.ht/~rockorager/tcell-term, embed it directly)
 - [ ] gnome terminal with color scheme makes white show up as orange?
-- [ ] Potentially use blue tokenizer/lexer, cant really use scanner
-    - strip it down to just idents, numbers, and strings
-    - when tabs are found, increment twOffset
-    - only column pos (the position in the line) is needed, and can add twOffset to it so dont need to recalc or do something else weird
-    - and idents could just use hldb (string would need to be handled on its own in there)
-    - [ ] Handle multiline string correctly (need to move it out of strHl or something)
-- [ ] Missing highlight color for numbers, and comments
 - [ ] Add -d or -debug flags, when enabled, capture timing of all functions and record in the log
 - [ ] Allow movement keys to be configurable (if including "modes")
 - [ ] Macros, record into small buffer via event keys
@@ -18,3 +12,10 @@ todo:
 - [x] Fix horizontal movement (mostly viewport)
 - [x] Fix vertical movement (should be able to move directly up a line and not clamp back to 0)
 - [x] Handle {},!+=/*%   etc. (need to hl these with kw1 color)
+- [x] Potentially use blue tokenizer/lexer, cant really use scanner
+    - strip it down to just idents, numbers, and strings
+    - when tabs are found, increment twOffset
+    - only column pos (the position in the line) is needed, and can add twOffset to it so dont need to recalc or do something else weird
+    - and idents could just use hldb (string would need to be handled on its own in there)
+    - [-] Handle multiline string correctly (need to move it out of strHl or something)
+- [x] Missing highlight color for numbers, and comments
