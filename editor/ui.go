@@ -37,10 +37,10 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 		return
 	}
 	offset := e.lPad - 1
-	l := lexer.New(line, e.hldb, e.hlOperators)
+	l := lexer.New(line, e.hldb, e.hlOperators, e.commentToken, e.stringTokens)
 	for tok := l.NextToken(); tok.Type != lexer.TTEof; tok = l.NextToken() {
 		switch tok.Type {
-		case lexer.TTIdent, lexer.TTString, lexer.TTNumber:
+		case lexer.TTIdent, lexer.TTString, lexer.TTNumber, lexer.TTComment:
 			hlStyle, ok := e.getHighlightStyle(tok.HlStyleType)
 			if !ok {
 				continue
@@ -58,21 +58,16 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 			}
 		}
 	}
-	// TODO: Implement
-	//  Tokenize, then match, then pick highlight and redraw content on line
-	// TODO: Handle string later
 }
 
 func (e *Editor) drawContent() {
 	numLines := len(e.fileContentLines)
-	for i := range e.sh - e.sbh {
-		fileLine := e.vScrollOffset + i
-		var l []rune
-		if fileLine < numLines {
-			l = e.fileContentLines[fileLine]
-		}
-		e.drawLine(i, l)
-		e.updateLineHighlight(i, l)
+	lastLine := e.vScrollOffset + (e.sh - e.sbh) - 1
+	for fileLine := e.vScrollOffset; fileLine <= lastLine && fileLine < numLines; fileLine++ {
+		screenLine := fileLine - e.vScrollOffset
+		line := e.fileContentLines[fileLine]
+		e.drawLine(screenLine, line)
+		e.updateLineHighlight(screenLine, line)
 	}
 }
 
