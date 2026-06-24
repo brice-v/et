@@ -49,7 +49,7 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	if len(splitFilename) > 0 {
 		fileExtension = splitFilename[len(splitFilename)-1]
 	}
-	e := &Editor{
+	return &Editor{
 		s:                s,
 		sbh:              1,
 		baseStyle:        baseStyle,
@@ -57,9 +57,8 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 		fileName:         fileName,
 		fileContentLines: fcl,
 		fileExtension:    fileExtension,
+		hl:               NewHighlightState(cfg, fileExtension),
 	}
-	e.hl = NewHighlightState(cfg, fileExtension)
-	return e
 }
 
 func getFileContent(fileName string) [][]rune {
