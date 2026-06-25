@@ -56,6 +56,7 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	if len(splitFilename) > 0 {
 		fileExtension = splitFilename[len(splitFilename)-1]
 	}
+	s.SetCursorStyle(config.CursorStyleFromString(cfg.CursorStyle), cfg.CursorColor.Color)
 	return &Editor{
 		s:                s,
 		sbh:              1,

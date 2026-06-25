@@ -67,6 +67,8 @@ type Config struct {
 	ShowLineNumbers     bool              `json:"show_line_numbers"`
 	FileExtensions      map[string]string `json:"file_extensions"`
 	DisableHighlighting bool              `json:"disable_highlighting"`
+	CursorStyle         string            `json:"cursor_style"`
+	CursorColor         Color             `json:"cursor_color"`
 }
 
 func NewDefault() *Config {
@@ -86,6 +88,8 @@ func NewDefault() *Config {
 		ShowLineNumbers:     DefaultShowLineNumbers(),
 		FileExtensions:      DefaultFileExtensions(),
 		DisableHighlighting: DefaultDisableHighlighting(),
+		CursorStyle:         DefaultCursorStyle(),
+		CursorColor:         DefaultCursorColor(),
 	}
 }
 

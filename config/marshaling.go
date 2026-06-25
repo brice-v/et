@@ -106,3 +106,22 @@ func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 func (k Key) MarshalJSON() ([]byte, error) {
 	return json.Marshal(k.String())
 }
+
+func CursorStyleFromString(s string) tcell.CursorStyle {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "blinking_block":
+		return tcell.CursorStyleBlinkingBlock
+	case "steady_block":
+		return tcell.CursorStyleSteadyBlock
+	case "blinking_underline":
+		return tcell.CursorStyleBlinkingUnderline
+	case "steady_underline":
+		return tcell.CursorStyleSteadyUnderline
+	case "blinking_bar":
+		return tcell.CursorStyleBlinkingBar
+	case "steady_bar":
+		return tcell.CursorStyleSteadyBar
+	default:
+		return tcell.CursorStyleDefault
+	}
+}

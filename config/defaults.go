@@ -72,3 +72,11 @@ func DefaultFileExtensions() map[string]string {
 func DefaultDisableHighlighting() bool {
 	return false
 }
+
+func DefaultCursorStyle() string {
+	return "blinking_bar"
+}
+
+func DefaultCursorColor() Color {
+	return Color{color.White}
+}
