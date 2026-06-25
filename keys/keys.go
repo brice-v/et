@@ -27,3 +27,8 @@ func IsKeyAny(key tcell.Key, keyAsRune string, mod tcell.ModMask, keys []config.
 	}
 	return false
 }
+
+func IsKey(key tcell.Key, keyAsRune string, mod tcell.ModMask, k config.Key) bool {
+	nk, nm := NormalizeKey(key, keyAsRune, mod)
+	return nk == k.Key && nm == k.Modifiers
+}

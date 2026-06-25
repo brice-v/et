@@ -70,18 +70,36 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	}
 	if keys.IsKeyAny(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
 		e.Exit = true
+	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) {
+		if e.promptMsg != nil {
+			e.exitPrompt()
+		} else {
+			e.prompt("Search:")
+		}
 	}
 }
 
 func (e *Editor) handleMoveUp() {
+	if e.promptMsg != nil {
+		// TODO: Maybe have action on up when prompt is filled in
+		return
+	}
 	e.cy--
 }
 
 func (e *Editor) handleMoveDown() {
+	if e.promptMsg != nil {
+		// TODO: Maybe have action on down when prompt is filled in
+		return
+	}
 	e.cy++
 }
 
 func (e *Editor) handleMoveLeft() {
+	if e.promptMsg != nil {
+		// TODO: Allow move left within prompt
+		return
+	}
 	fc := e.currentFileCol()
 	fileLine := e.vScrollOffset + e.cy
 	if fc <= 0 && fileLine > 0 {
@@ -93,6 +111,10 @@ func (e *Editor) handleMoveLeft() {
 }
 
 func (e *Editor) handleMoveRight() {
+	if e.promptMsg != nil {
+		// TODO: Allow move right within prompt
+		return
+	}
 	fc := e.currentFileCol()
 	fileLine := e.vScrollOffset + e.cy
 	if fileLine >= 0 && fileLine < len(e.fileContentLines) && fc >= len(e.fileContentLines[fileLine]) {
@@ -104,6 +126,10 @@ func (e *Editor) handleMoveRight() {
 }
 
 func (e *Editor) syncStickyCol() {
+	if e.promptMsg != nil {
+		// TODO: What should happen here
+		return
+	}
 	fileLine := e.vScrollOffset + e.cy
 	if fileLine >= 0 && fileLine < len(e.fileContentLines) {
 		e.stickyCol = e.currentFileCol()
@@ -111,6 +137,10 @@ func (e *Editor) syncStickyCol() {
 }
 
 func (e *Editor) clampCursor() {
+	if e.promptMsg != nil {
+		// TODO: What should happen here
+		return
+	}
 	numLines := len(e.fileContentLines)
 	if numLines == 0 {
 		e.cy = 0
@@ -156,6 +186,10 @@ func (e *Editor) clampCursor() {
 }
 
 func (e *Editor) updateViewport() {
+	if e.promptMsg != nil {
+		// TODO: What should happen here
+		return
+	}
 	vh := e.sh - e.sbh
 	if vh <= 0 {
 		e.vScrollOffset = 0
@@ -189,4 +223,20 @@ func (e *Editor) updateViewport() {
 		e.vScrollOffset = 0
 		e.cy = 0
 	}
+}
+
+func (e *Editor) prompt(msg string) {
+	e.savedCx, e.savedCy = e.cx, e.cy
+	e.savedVScrollOffset, e.savedHScrollOffset = e.vScrollOffset, e.hScrollOffset
+	e.sbh++
+	e.promptMsg = []rune(" " + msg + " ")
+	e.cy = e.sh - 1
+	e.cx = len(e.promptMsg)
+}
+
+func (e *Editor) exitPrompt() {
+	e.sbh--
+	e.promptMsg = nil
+	e.cx, e.cy = e.savedCx, e.savedCy
+	e.vScrollOffset, e.hScrollOffset = e.savedVScrollOffset, e.savedHScrollOffset
 }

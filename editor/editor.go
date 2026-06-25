@@ -24,10 +24,14 @@ type Editor struct {
 
 	// cx, cy cursor x and y position
 	cx, cy int
+	// savedCx, savedCy are the saved cursor positions when prompted
+	savedCx, savedCy int
 	// vScrollOffset is the first visible line in the viewport
 	vScrollOffset int
 	// hScrollOffset is the first visible column in the viewport
-	hScrollOffset int
+	hScrollOffset      int
+	savedVScrollOffset int
+	savedHScrollOffset int
 	// stickyCol is the file column for vertical movement that gets "stuck"
 	stickyCol int
 
@@ -36,6 +40,9 @@ type Editor struct {
 	fileName         string
 	fileContentLines [][]rune
 	fileExtension    string
+
+	// promptMsg is the message presented to the user at the bottom of the screen
+	promptMsg []rune
 
 	// Exit is a flag to trigger exit
 	Exit bool

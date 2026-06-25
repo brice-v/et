@@ -108,6 +108,26 @@ func (e *Editor) drawStatusBar() {
 	}
 }
 
+func (e *Editor) drawPrompt() {
+	if e.promptMsg == nil {
+		return
+	}
+	if len(e.promptMsg) == 0 {
+		return
+	}
+	h := e.sh - 1
+	statusStyle := e.baseStyle.Background(e.cfg.Colors.StatusBar.Color)
+	for x := range e.sw {
+		e.s.SetContent(x, h, ' ', nil, statusStyle)
+	}
+	for i, ch := range e.promptMsg {
+		if i >= e.sw {
+			break
+		}
+		e.s.SetContent(i, h, ch, nil, statusStyle)
+	}
+}
+
 func (e *Editor) drawLineNumbersOrTilde() {
 	ch := []rune(e.cfg.LeftPadString)
 	useLineNums := e.cfg.ShowLineNumbers && e.fileContentLines != nil
@@ -155,6 +175,7 @@ func (e *Editor) Draw() {
 	e.clampCursor()
 	e.drawContent()
 	e.drawStatusBar()
+	e.drawPrompt()
 	e.drawWelcomeMessage()
 	e.s.ShowCursor(e.cx, e.cy)
 	e.s.Show()

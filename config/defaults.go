@@ -37,6 +37,10 @@ func DefaultKeyBindingsQuit() []Key {
 	}
 }
 
+func DefaultKeyBindingFind() Key {
+	return Key{Key: tcell.KeyF, Modifiers: tcell.ModCtrl}
+}
+
 func DefaultLanguagesColorMap() map[string]ColorMap {
 	return map[string]ColorMap{
 		"go": {

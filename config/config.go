@@ -43,6 +43,7 @@ type Colors struct {
 
 type KeyBindings struct {
 	Quit []Key `json:"quit"`
+	Find Key   `json:"find"`
 }
 
 func (c *Config) GetQuitKeyBindingsAsStr() string {
@@ -78,6 +79,7 @@ func NewDefault() *Config {
 		},
 		KeyBindings: KeyBindings{
 			Quit: DefaultKeyBindingsQuit(),
+			Find: DefaultKeyBindingFind(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),
