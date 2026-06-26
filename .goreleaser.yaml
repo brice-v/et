@@ -17,7 +17,7 @@ builds:
 
 archives:
   - id: archive
-    formats: tarball
+    formats: tar.gz
     format_overrides:
       - goos: windows
         formats: zip
