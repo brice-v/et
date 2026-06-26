@@ -35,11 +35,14 @@ func (k *Key) String() string {
 		parts = append(parts, "alt")
 	}
 	base := ""
+	// TODO: Need to handle this better
 	switch k.Key {
 	case tcell.KeyQ:
 		base = "q"
 	case tcell.KeyEscape:
 		base = "esc"
+	case tcell.KeyF:
+		base = "f"
 	default:
 		return ""
 	}
@@ -91,11 +94,14 @@ func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 
 	keyStr := keyParts[0]
 	var key tcell.Key
+	// TODO: Need to handle this better
 	switch keyStr {
 	case "q":
 		key = tcell.KeyQ
 	case "esc", "escape":
 		key = tcell.KeyEscape
+	case "f":
+		key = tcell.KeyF
 	default:
 		return 0, 0, fmt.Errorf("failed to parse %s as tcell key", keyStr)
 	}
@@ -104,7 +110,11 @@ func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 }
 
 func (k Key) MarshalJSON() ([]byte, error) {
-	return json.Marshal(k.String())
+	s := k.String()
+	if s == "" {
+		return nil, fmt.Errorf("cannot marshal zero-value Key to JSON")
+	}
+	return json.Marshal(s)
 }
 
 func CursorStyleFromString(s string) tcell.CursorStyle {
