@@ -6,7 +6,7 @@ import (
 
 const (
 	LogFileName         = "et.log"
-	Version             = "0.0.1"
+	Version             = "0.0.2"
 	StickyColMax        = math.MaxInt64
 	welcomeMessageLine1 = "et - (e)dit (t)ext"
 	welcomeMessageLine2 = "version " + Version
