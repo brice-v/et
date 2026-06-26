@@ -1,7 +1,8 @@
 version: 2
 
 builds:
-  - env:
+  - id: main
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -15,12 +16,13 @@ builds:
         goarch: amd64
 
 archives:
-  - format: tarball
+  - id: archive
+    formats: tarball
     format_overrides:
       - goos: windows
-        format: zip
-    replacements:
-      darwin: macos
+        formats: zip
+    ids: [main]
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 
 changelog:
   sort: asc
