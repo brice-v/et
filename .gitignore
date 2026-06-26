@@ -1,6 +1,7 @@
 et
 *.exe
 *.out
+*.cov
 et.json
 et.log
 test.txt
