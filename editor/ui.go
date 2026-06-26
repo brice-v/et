@@ -56,11 +56,11 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 }
 
 func (e *Editor) drawContent() {
-	numLines := len(e.fileContentLines)
+	numLines := e.buffer.NumLines()
 	lastLine := e.vScrollOffset + (e.sh - e.sbh) - 1
 	for fileLine := e.vScrollOffset; fileLine <= lastLine && fileLine < numLines; fileLine++ {
 		screenLine := fileLine - e.vScrollOffset
-		line := e.fileContentLines[fileLine]
+		line := e.buffer.Line(fileLine)
 		e.drawLine(screenLine, line)
 		e.updateLineHighlight(screenLine, line)
 	}
@@ -86,7 +86,7 @@ func (e *Editor) drawStatusBar() {
 	}
 
 	ft := ""
-	if e.fileContentLines != nil {
+	if e.buffer.IsOpen() {
 		if e.fileExtension != "" {
 			if fileType, ok := e.cfg.FileExtensions[e.fileExtension]; ok {
 				ft = "[" + fileType + "]"
@@ -130,9 +130,9 @@ func (e *Editor) drawPrompt() {
 
 func (e *Editor) drawLineNumbersOrTilde() {
 	ch := []rune(e.cfg.LeftPadString)
-	useLineNums := e.cfg.ShowLineNumbers && e.fileContentLines != nil
+	useLineNums := e.cfg.ShowLineNumbers && e.buffer.IsOpen()
 	if useLineNums {
-		maxLinesDisplayed := len(e.fileContentLines)
+		maxLinesDisplayed := e.buffer.NumLines()
 		maxLinesAsStr := fmt.Sprintf("%d", maxLinesDisplayed)
 		// +2 so that other things using this allow for extra padding to the right
 		e.lPad = len([]rune(maxLinesAsStr)) + 2
@@ -150,7 +150,7 @@ func (e *Editor) drawLineNumbersOrTilde() {
 }
 
 func (e *Editor) drawWelcomeMessage() {
-	if e.fileContentLines != nil {
+	if e.buffer.IsOpen() {
 		return
 	}
 	y := (e.sh / 2) - 2

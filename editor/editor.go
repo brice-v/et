@@ -2,8 +2,6 @@ package editor
 
 import (
 	"et/config"
-	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
@@ -37,9 +35,9 @@ type Editor struct {
 
 	cfg *config.Config
 
-	fileName         string
-	fileContentLines [][]rune
-	fileExtension    string
+	fileName      string
+	buffer        *Buffer
+	fileExtension string
 
 	// promptMsg is the message presented to the user at the bottom of the screen
 	promptMsg []rune
@@ -49,7 +47,6 @@ type Editor struct {
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
-	fcl := getFileContent(fileName)
 	baseStyle := tcell.StyleDefault.Background(cfg.Colors.Background.Color).Foreground(cfg.Colors.Foreground.Color)
 	splitFilename := strings.Split(fileName, ".")
 	fileExtension := ""
@@ -58,30 +55,14 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	}
 	s.SetCursorStyle(config.CursorStyleFromString(cfg.CursorStyle), cfg.CursorColor.Color)
 	return &Editor{
-		s:                s,
-		sbh:              1,
-		baseStyle:        baseStyle,
-		cfg:              cfg,
-		fileName:         fileName,
-		fileContentLines: fcl,
-		fileExtension:    fileExtension,
-		hl:               NewHighlightState(cfg, fileExtension),
+		s:             s,
+		sbh:           1,
+		baseStyle:     baseStyle,
+		cfg:           cfg,
+		fileName:      fileName,
+		buffer:        NewBuffer(fileName),
+		fileExtension: fileExtension,
+		hl:            NewHighlightState(cfg, fileExtension),
 	}
 }
 
-func getFileContent(fileName string) [][]rune {
-	var fcl [][]rune = nil
-	if fileName != "" {
-		data, err := os.ReadFile(fileName)
-		if err != nil {
-			slog.Warn("could not read file", "err", err)
-			return fcl
-		}
-		lines := strings.Split(string(data), "\n")
-		fcl = make([][]rune, len(lines))
-		for i, line := range lines {
-			fcl[i] = []rune(line)
-		}
-	}
-	return fcl
-}

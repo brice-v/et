@@ -40,10 +40,10 @@ func visualToFileCol(line []rune, visualCol int, tabWidth int) int {
 
 func (e *Editor) currentFileCol() int {
 	fileLine := e.vScrollOffset + e.cy
-	if fileLine < 0 || fileLine >= len(e.fileContentLines) {
+	if fileLine < 0 || fileLine >= e.buffer.NumLines() {
 		return 0
 	}
-	line := e.fileContentLines[fileLine]
+	line := e.buffer.Line(fileLine)
 	visualCol := fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth) + (e.cx - e.lPad)
 	return visualToFileCol(line, visualCol, e.cfg.TabWidth)
 }
@@ -117,7 +117,7 @@ func (e *Editor) handleMoveRight() {
 	}
 	fc := e.currentFileCol()
 	fileLine := e.vScrollOffset + e.cy
-	if fileLine >= 0 && fileLine < len(e.fileContentLines) && fc >= len(e.fileContentLines[fileLine]) {
+	if fileLine >= 0 && fileLine < e.buffer.NumLines() && fc >= len(e.buffer.Line(fileLine)) {
 		e.cy++
 		e.stickyCol = 0
 	} else {
@@ -131,7 +131,7 @@ func (e *Editor) syncStickyCol() {
 		return
 	}
 	fileLine := e.vScrollOffset + e.cy
-	if fileLine >= 0 && fileLine < len(e.fileContentLines) {
+	if fileLine >= 0 && fileLine < e.buffer.NumLines() {
 		e.stickyCol = e.currentFileCol()
 	}
 }
@@ -141,7 +141,7 @@ func (e *Editor) clampCursor() {
 		// TODO: What should happen here
 		return
 	}
-	numLines := len(e.fileContentLines)
+	numLines := e.buffer.NumLines()
 	if numLines == 0 {
 		e.cy = 0
 		e.cx = e.lPad
@@ -155,7 +155,7 @@ func (e *Editor) clampCursor() {
 	if fileLine >= numLines {
 		fileLine = numLines - 1
 	}
-	line := e.fileContentLines[fileLine]
+	line := e.buffer.Line(fileLine)
 	lineLen := len(line)
 
 	fc := max(min(e.stickyCol, lineLen), 0)
@@ -210,7 +210,7 @@ func (e *Editor) updateViewport() {
 	}
 
 	// Keep cursor file line in bounds
-	n := len(e.fileContentLines)
+	n := e.buffer.NumLines()
 	if n > 0 {
 		if fileLine := e.vScrollOffset + e.cy; fileLine >= n {
 			e.vScrollOffset -= fileLine - n + 1
