@@ -62,6 +62,14 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		e.handleMoveLeft()
 	case tcell.KeyRight:
 		e.handleMoveRight()
+	case tcell.KeyEnter:
+		e.handleEnter()
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		e.handleBackspace()
+	case tcell.KeyDelete:
+		e.handleDelete()
+	case tcell.KeyTab:
+		e.handleInsertRune("\t")
 	}
 	e.updateViewport()
 	e.clampCursor()
@@ -70,6 +78,8 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	}
 	if keys.IsKeyAny(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
 		e.Exit = true
+	} else if key == tcell.KeyRune && !e.Exit {
+		e.handleInsertRune(keyAsRune)
 	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) {
 		if e.promptMsg != nil {
 			e.exitPrompt()
@@ -222,6 +232,68 @@ func (e *Editor) updateViewport() {
 	} else {
 		e.vScrollOffset = 0
 		e.cy = 0
+	}
+}
+
+func (e *Editor) handleInsertRune(r string) {
+	if e.promptMsg != nil {
+		// TODO: Allow inserting text in prompt
+		return
+	}
+	if len(r) == 0 {
+		return
+	}
+	fileLine := e.vScrollOffset + e.cy
+	fc := e.currentFileCol()
+	runes := []rune(r)
+	for _, r := range runes {
+		e.buffer.InsertRune(fileLine, fc, r)
+		fc++
+	}
+	e.stickyCol = fc
+}
+
+func (e *Editor) handleEnter() {
+	if e.promptMsg != nil {
+		// TODO: Maybe submit prompt on enter
+		return
+	}
+	fileLine := e.vScrollOffset + e.cy
+	fc := e.currentFileCol()
+	e.buffer.SplitLine(fileLine, fc)
+	e.cy++
+	e.stickyCol = 0
+}
+
+func (e *Editor) handleBackspace() {
+	if e.promptMsg != nil {
+		// TODO: Allow backspace in prompt
+		return
+	}
+	fileLine := e.vScrollOffset + e.cy
+	fc := e.currentFileCol()
+	if fc > 0 {
+		e.buffer.DeleteRune(fileLine, fc-1)
+		e.stickyCol = fc - 1
+	} else if fileLine > 0 {
+		prevLineLen := len(e.buffer.Line(fileLine - 1))
+		e.buffer.JoinLine(fileLine - 1)
+		e.cy--
+		e.stickyCol = prevLineLen
+	}
+}
+
+func (e *Editor) handleDelete() {
+	if e.promptMsg != nil {
+		// TODO: Allow delete in prompt
+		return
+	}
+	fileLine := e.vScrollOffset + e.cy
+	fc := e.currentFileCol()
+	if fileLine < e.buffer.NumLines() && fc < len(e.buffer.Line(fileLine)) {
+		e.buffer.DeleteRune(fileLine, fc)
+	} else if fileLine < e.buffer.NumLines()-1 {
+		e.buffer.JoinLine(fileLine)
 	}
 }
 

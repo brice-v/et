@@ -77,7 +77,11 @@ func (e *Editor) drawStatusBar() {
 	if e.fileName == "" {
 		fnameStr = "<new file>"
 	}
-	statusMsg := fmt.Sprintf(" et - %s | %s to quit", fnameStr, quitKeyBindsString)
+	modStr := ""
+	if e.buffer.IsDirty() {
+		modStr = " [*]"
+	}
+	statusMsg := fmt.Sprintf(" et - %s%s | %s to quit", fnameStr, modStr, quitKeyBindsString)
 	for i, ch := range statusMsg {
 		if i >= e.sw {
 			break
@@ -129,19 +133,22 @@ func (e *Editor) drawPrompt() {
 }
 
 func (e *Editor) drawLineNumbersOrTilde() {
-	ch := []rune(e.cfg.LeftPadString)
+	tilde := []rune(e.cfg.LeftPadString)
 	useLineNums := e.cfg.ShowLineNumbers && e.buffer.IsOpen()
+	numLines := e.buffer.NumLines()
 	if useLineNums {
-		maxLinesDisplayed := e.buffer.NumLines()
-		maxLinesAsStr := fmt.Sprintf("%d", maxLinesDisplayed)
-		// +2 so that other things using this allow for extra padding to the right
-		e.lPad = len([]rune(maxLinesAsStr)) + 2
+		maxLinesAsStr := fmt.Sprintf("%d", numLines)
+		e.lPad = len([]rune(maxLinesAsStr)) + 1
 	} else {
-		e.lPad = len(ch) + 1
+		e.lPad = len(tilde) + 1
 	}
 	for y := range e.sh - e.sbh {
-		if useLineNums {
-			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, e.vScrollOffset+y+1))
+		var ch []rune
+		fileLine := e.vScrollOffset + y
+		if useLineNums && fileLine < numLines {
+			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, fileLine+1))
+		} else {
+			ch = tilde
 		}
 		for i := range ch {
 			e.s.SetContent(i, y, ch[i], nil, e.baseStyle)

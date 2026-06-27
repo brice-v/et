@@ -69,15 +69,15 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestKeyBindingsRoundTrip(t *testing.T) {
-	jsonStr := `{"quit": ["ctrl+q", "q", "esc"]}`
+	jsonStr := `{"quit": ["ctrl+q", "esc"]}`
 
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
 
-	if len(kb.Quit) != 3 {
-		t.Fatalf("len(Quit) = %d, want 3", len(kb.Quit))
+	if len(kb.Quit) != 2 {
+		t.Fatalf("len(Quit) = %d, want 2", len(kb.Quit))
 	}
 
 	want := NewDefault().KeyBindings
@@ -532,7 +532,7 @@ func TestDisableHighlighting(t *testing.T) {
 func TestGetQuitKeyBindingsAsStr(t *testing.T) {
 	cfg := NewDefault()
 	got := cfg.GetQuitKeyBindingsAsStr()
-	want := "[ctrl+q,q,esc]"
+	want := "[ctrl+q,esc]"
 	if got != want {
 		t.Errorf("GetQuitKeyBindingsAsStr() = %q, want %q", got, want)
 	}

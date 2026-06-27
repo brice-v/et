@@ -32,7 +32,6 @@ func DefaultShowLineNumbers() bool {
 func DefaultKeyBindingsQuit() []Key {
 	return []Key{
 		{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl},
-		{Key: tcell.KeyQ, Modifiers: tcell.ModNone},
 		{Key: tcell.KeyEscape, Modifiers: tcell.ModNone},
 	}
 }

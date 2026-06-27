@@ -23,7 +23,7 @@
 		}
 	},
 	"keybindings": {
-		"quit": ["ctrl+q", "q", "esc"]
+		"quit": ["ctrl+q", "esc"]
 	},
 	"tab_width": 4,
 	"left_pad_string": "~",
