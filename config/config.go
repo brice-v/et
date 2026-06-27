@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -98,7 +99,12 @@ func Parse(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			slog.Warn("parse close file failed", "err", err)
+		}
+	}()
 
 	cfg := NewDefault()
 	if err := json.NewDecoder(f).Decode(cfg); err != nil {

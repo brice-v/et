@@ -315,12 +315,19 @@ func TestParseFileNotFound(t *testing.T) {
 	}
 }
 
+func removeFile(t *testing.T, path string) {
+	err := os.Remove(path)
+	if err != nil {
+		t.Errorf("failed to remove file: %s, error: %s", path, err.Error())
+	}
+}
+
 func TestParseInvalidJSON(t *testing.T) {
 	path := "test_invalid.json"
 	if err := os.WriteFile(path, []byte("{invalid}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(path)
+	defer removeFile(t, path)
 
 	_, err := Parse(path)
 	if err == nil {
@@ -586,7 +593,7 @@ func TestCursorStyleFromString(t *testing.T) {
 		{"steady_underline", tcell.CursorStyleSteadyUnderline},
 		{"blinking_bar", tcell.CursorStyleBlinkingBar},
 		{"steady_bar", tcell.CursorStyleSteadyBar},
-		{"BLINKING_BLOCK", tcell.CursorStyleBlinkingBlock},  // case insensitive
+		{"BLINKING_BLOCK", tcell.CursorStyleBlinkingBlock}, // case insensitive
 		{"  steady_block  ", tcell.CursorStyleSteadyBlock}, // trimmed
 		{"", tcell.CursorStyleDefault},                     // unknown -> default
 		{"foo", tcell.CursorStyleDefault},                  // unknown -> default
@@ -642,7 +649,7 @@ func TestCursorConfigDefaultsWhenMissing(t *testing.T) {
 	if err := os.WriteFile(path, []byte(`{}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(path)
+	defer removeFile(t, path)
 
 	cfg, err := Parse(path)
 	if err != nil {
@@ -681,7 +688,7 @@ func TestCursorConfigRoundTrip(t *testing.T) {
 	if err := os.WriteFile(path, []byte(wantJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(path)
+	defer removeFile(t, path)
 
 	cfg1, err := Parse(path)
 	if err != nil {
@@ -717,7 +724,7 @@ func TestCursorConfigRoundTrip(t *testing.T) {
 	if err := os.WriteFile(path2, []byte(wantJSON2), 0644); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(path2)
+	defer removeFile(t, path2)
 
 	cfg2, err := Parse(path2)
 	if err != nil {
