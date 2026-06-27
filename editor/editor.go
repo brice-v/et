@@ -39,8 +39,10 @@ type Editor struct {
 	buffer        *Buffer
 	fileExtension string
 
-	// promptMsg is the message presented to the user at the bottom of the screen
-	promptMsg []rune
+	// promptLabel is the message presented to the user at the bottom of the screen
+	promptLabel []rune
+	// promptInput is the users actual input into the prompt
+	promptInput []rune
 
 	// Exit is a flag to trigger exit
 	Exit bool
@@ -65,4 +67,3 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 		hl:            NewHighlightState(cfg, fileExtension),
 	}
 }
-

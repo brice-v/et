@@ -113,10 +113,7 @@ func (e *Editor) drawStatusBar() {
 }
 
 func (e *Editor) drawPrompt() {
-	if e.promptMsg == nil {
-		return
-	}
-	if len(e.promptMsg) == 0 {
+	if e.promptLabel == nil {
 		return
 	}
 	h := e.sh - 1
@@ -124,11 +121,18 @@ func (e *Editor) drawPrompt() {
 	for x := range e.sw {
 		e.s.SetContent(x, h, ' ', nil, statusStyle)
 	}
-	for i, ch := range e.promptMsg {
+	for i, ch := range e.promptLabel {
 		if i >= e.sw {
 			break
 		}
 		e.s.SetContent(i, h, ch, nil, statusStyle)
+	}
+	for i, ch := range e.promptInput {
+		pos := len(e.promptLabel) + i
+		if pos >= e.sw {
+			break
+		}
+		e.s.SetContent(pos, h, ch, nil, statusStyle)
 	}
 }
 

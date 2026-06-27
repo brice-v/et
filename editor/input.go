@@ -3,6 +3,7 @@ package editor
 import (
 	"et/consts"
 	"et/keys"
+	"log/slog"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -81,7 +82,7 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	} else if key == tcell.KeyRune && !e.Exit {
 		e.handleInsertRune(keyAsRune)
 	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) {
-		if e.promptMsg != nil {
+		if e.promptLabel != nil {
 			e.exitPrompt()
 		} else {
 			e.prompt("Search:")
@@ -90,7 +91,7 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 }
 
 func (e *Editor) handleMoveUp() {
-	if e.promptMsg != nil {
+	if e.promptLabel != nil {
 		// TODO: Maybe have action on up when prompt is filled in
 		return
 	}
@@ -98,7 +99,7 @@ func (e *Editor) handleMoveUp() {
 }
 
 func (e *Editor) handleMoveDown() {
-	if e.promptMsg != nil {
+	if e.promptLabel != nil {
 		// TODO: Maybe have action on down when prompt is filled in
 		return
 	}
@@ -106,8 +107,10 @@ func (e *Editor) handleMoveDown() {
 }
 
 func (e *Editor) handleMoveLeft() {
-	if e.promptMsg != nil {
-		// TODO: Allow move left within prompt
+	if e.promptLabel != nil {
+		if e.cx > len(e.promptLabel) {
+			e.cx--
+		}
 		return
 	}
 	fc := e.currentFileCol()
@@ -121,8 +124,11 @@ func (e *Editor) handleMoveLeft() {
 }
 
 func (e *Editor) handleMoveRight() {
-	if e.promptMsg != nil {
-		// TODO: Allow move right within prompt
+	if e.promptLabel != nil {
+		maxCx := len(e.promptLabel) + len(e.promptInput)
+		if e.cx < maxCx {
+			e.cx++
+		}
 		return
 	}
 	fc := e.currentFileCol()
@@ -136,7 +142,7 @@ func (e *Editor) handleMoveRight() {
 }
 
 func (e *Editor) syncStickyCol() {
-	if e.promptMsg != nil {
+	if e.promptLabel != nil {
 		// TODO: What should happen here
 		return
 	}
@@ -147,7 +153,7 @@ func (e *Editor) syncStickyCol() {
 }
 
 func (e *Editor) clampCursor() {
-	if e.promptMsg != nil {
+	if e.promptLabel != nil {
 		// TODO: What should happen here
 		return
 	}
@@ -196,7 +202,7 @@ func (e *Editor) clampCursor() {
 }
 
 func (e *Editor) updateViewport() {
-	if e.promptMsg != nil {
+	if e.promptLabel != nil {
 		// TODO: What should happen here
 		return
 	}
@@ -236,26 +242,34 @@ func (e *Editor) updateViewport() {
 }
 
 func (e *Editor) handleInsertRune(r string) {
-	if e.promptMsg != nil {
-		// TODO: Allow inserting text in prompt
+	if len(r) == 0 {
 		return
 	}
-	if len(r) == 0 {
+	if e.promptLabel != nil {
+		ci := e.cx - len(e.promptLabel)
+		runes := []rune(r)
+		newInput := make([]rune, 0, len(e.promptInput)+len(runes))
+		newInput = append(newInput, e.promptInput[:ci]...)
+		newInput = append(newInput, runes...)
+		newInput = append(newInput, e.promptInput[ci:]...)
+		e.promptInput = newInput
+		e.cx += len(runes)
 		return
 	}
 	fileLine := e.vScrollOffset + e.cy
 	fc := e.currentFileCol()
-	runes := []rune(r)
-	for _, r := range runes {
-		e.buffer.InsertRune(fileLine, fc, r)
+	for _, ch := range r {
+		e.buffer.InsertRune(fileLine, fc, ch)
 		fc++
 	}
 	e.stickyCol = fc
 }
 
 func (e *Editor) handleEnter() {
-	if e.promptMsg != nil {
+	if e.promptLabel != nil {
 		// TODO: Maybe submit prompt on enter
+		slog.Info("prompt entered", "prompt", string(e.promptInput))
+		e.exitPrompt()
 		return
 	}
 	fileLine := e.vScrollOffset + e.cy
@@ -266,8 +280,12 @@ func (e *Editor) handleEnter() {
 }
 
 func (e *Editor) handleBackspace() {
-	if e.promptMsg != nil {
-		// TODO: Allow backspace in prompt
+	if e.promptLabel != nil {
+		ci := e.cx - len(e.promptLabel)
+		if ci > 0 {
+			e.promptInput = append(e.promptInput[:ci-1], e.promptInput[ci:]...)
+			e.cx--
+		}
 		return
 	}
 	fileLine := e.vScrollOffset + e.cy
@@ -284,8 +302,11 @@ func (e *Editor) handleBackspace() {
 }
 
 func (e *Editor) handleDelete() {
-	if e.promptMsg != nil {
-		// TODO: Allow delete in prompt
+	if e.promptLabel != nil {
+		ci := e.cx - len(e.promptLabel)
+		if ci < len(e.promptInput) {
+			e.promptInput = append(e.promptInput[:ci], e.promptInput[ci+1:]...)
+		}
 		return
 	}
 	fileLine := e.vScrollOffset + e.cy
@@ -297,18 +318,20 @@ func (e *Editor) handleDelete() {
 	}
 }
 
-func (e *Editor) prompt(msg string) {
+func (e *Editor) prompt(label string) {
 	e.savedCx, e.savedCy = e.cx, e.cy
 	e.savedVScrollOffset, e.savedHScrollOffset = e.vScrollOffset, e.hScrollOffset
 	e.sbh++
-	e.promptMsg = []rune(" " + msg + " ")
+	e.promptLabel = []rune(" " + label + " ")
+	e.promptInput = []rune{}
 	e.cy = e.sh - 1
-	e.cx = len(e.promptMsg)
+	e.cx = len(e.promptLabel)
 }
 
 func (e *Editor) exitPrompt() {
 	e.sbh--
-	e.promptMsg = nil
+	e.promptLabel = nil
+	e.promptInput = nil
 	e.cx, e.cy = e.savedCx, e.savedCy
 	e.vScrollOffset, e.hScrollOffset = e.savedVScrollOffset, e.savedHScrollOffset
 }
