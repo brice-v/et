@@ -2,9 +2,17 @@ package editor
 
 import (
 	"et/config"
+	"log/slog"
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
+)
+
+type promptMode int
+
+const (
+	promptModeNormal promptMode = iota
+	promptModeFind
 )
 
 type Editor struct {
@@ -24,6 +32,8 @@ type Editor struct {
 	cx, cy int
 	// savedCx, savedCy are the saved cursor positions when prompted
 	savedCx, savedCy int
+	// foundCx, foundCy are the last search match screen position (-1 = no active match)
+	foundCx, foundCy int
 	// vScrollOffset is the first visible line in the viewport
 	vScrollOffset int
 	// hScrollOffset is the first visible column in the viewport
@@ -43,6 +53,7 @@ type Editor struct {
 	promptLabel []rune
 	// promptInput is the users actual input into the prompt
 	promptInput []rune
+	promptMode  promptMode
 
 	// Exit is a flag to trigger exit
 	Exit bool
@@ -65,5 +76,58 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 		buffer:        NewBuffer(fileName),
 		fileExtension: fileExtension,
 		hl:            NewHighlightState(cfg, fileExtension),
+		promptMode:    promptModeNormal,
 	}
+}
+
+func (et *Editor) HandlePromptMode() {
+	if et.promptMode == promptModeNormal {
+		return
+	}
+
+	switch et.promptMode {
+	case promptModeFind:
+		input := string(et.promptInput)
+		if input == "" {
+			et.vScrollOffset = et.savedVScrollOffset
+			et.hScrollOffset = et.savedHScrollOffset
+			et.foundCx = -1
+			return
+		}
+		et.findMatches(input)
+	default:
+		slog.Warn("unknown promptMode", "promptMode", et.promptMode)
+	}
+}
+
+func (et *Editor) findMatches(input string) {
+	for lineNo, line := range et.buffer.lines {
+		lineText := string(line)
+		// TODO: Update to support ignore case and regex
+		n := strings.Index(lineText, input)
+		if n == -1 {
+			continue
+		}
+		et.displayFound(lineNo, n)
+	}
+	// TODO: Highlight matches on screen
+}
+
+func (et *Editor) displayFound(lineNo, col int) {
+	vh := et.sh - et.sbh
+	if vh <= 0 {
+		return
+	}
+
+	savedCy, savedCx := et.cy, et.cx
+
+	et.vScrollOffset = max(0, lineNo-vh/2)
+	et.cy = lineNo - et.vScrollOffset
+	et.stickyCol = col
+	et.adjustViewport()
+	et.clampCursorPos()
+
+	et.foundCx, et.foundCy = et.cx, et.cy
+
+	et.cy, et.cx = savedCy, savedCx
 }

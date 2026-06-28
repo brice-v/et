@@ -61,6 +61,7 @@ func main() {
 			et.Draw()
 		case *tcell.EventKey:
 			et.HandleKeyPress(e)
+			et.HandlePromptMode()
 			if et.Exit {
 				return
 			}

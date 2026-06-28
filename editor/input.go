@@ -85,6 +85,7 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		if e.promptLabel != nil {
 			e.exitPrompt()
 		} else {
+			e.promptMode = promptModeFind
 			e.prompt("Search:")
 		}
 	}
@@ -152,11 +153,7 @@ func (e *Editor) syncStickyCol() {
 	}
 }
 
-func (e *Editor) clampCursor() {
-	if e.promptLabel != nil {
-		// TODO: What should happen here
-		return
-	}
+func (e *Editor) clampCursorPos() {
 	numLines := e.buffer.NumLines()
 	if numLines == 0 {
 		e.cy = 0
@@ -201,11 +198,14 @@ func (e *Editor) clampCursor() {
 	e.cx = vc - scrollVisual + e.lPad
 }
 
-func (e *Editor) updateViewport() {
+func (e *Editor) clampCursor() {
 	if e.promptLabel != nil {
-		// TODO: What should happen here
 		return
 	}
+	e.clampCursorPos()
+}
+
+func (e *Editor) adjustViewport() {
 	vh := e.sh - e.sbh
 	if vh <= 0 {
 		e.vScrollOffset = 0
@@ -239,6 +239,13 @@ func (e *Editor) updateViewport() {
 		e.vScrollOffset = 0
 		e.cy = 0
 	}
+}
+
+func (e *Editor) updateViewport() {
+	if e.promptLabel != nil {
+		return
+	}
+	e.adjustViewport()
 }
 
 func (e *Editor) handleInsertRune(r string) {
@@ -321,6 +328,7 @@ func (e *Editor) handleDelete() {
 func (e *Editor) prompt(label string) {
 	e.savedCx, e.savedCy = e.cx, e.cy
 	e.savedVScrollOffset, e.savedHScrollOffset = e.vScrollOffset, e.hScrollOffset
+	e.foundCx = -1
 	e.sbh++
 	e.promptLabel = []rune(" " + label + " ")
 	e.promptInput = []rune{}
@@ -332,6 +340,10 @@ func (e *Editor) exitPrompt() {
 	e.sbh--
 	e.promptLabel = nil
 	e.promptInput = nil
-	e.cx, e.cy = e.savedCx, e.savedCy
-	e.vScrollOffset, e.hScrollOffset = e.savedVScrollOffset, e.savedHScrollOffset
+	if e.foundCx >= 0 {
+		e.cx, e.cy = e.foundCx, e.foundCy
+	} else {
+		e.cx, e.cy = e.savedCx, e.savedCy
+	}
+	e.promptMode = promptModeNormal
 }
