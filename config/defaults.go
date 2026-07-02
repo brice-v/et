@@ -17,6 +17,10 @@ func DefaultColorStatusBar() Color {
 	return Color{color.DarkCyan}
 }
 
+func DefaultColorMatchHighlight() Color {
+	return Color{color.NewRGBColor(96, 94, 104)}
+}
+
 func DefaultTabWidth() int {
 	return 4
 }

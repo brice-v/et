@@ -3,6 +3,7 @@
 		"foreground": "white",
 		"background": "#282A35",
 		"status_bar": "darkcyan",
+		"match_highlight": "white",
 		"languages": {
 			"go": {
 				"keywords1": ["break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var"],

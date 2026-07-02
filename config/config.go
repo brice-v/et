@@ -36,10 +36,11 @@ type ColorMap struct {
 }
 
 type Colors struct {
-	Foreground Color               `json:"foreground"`
-	Background Color               `json:"background"`
-	StatusBar  Color               `json:"status_bar"`
-	Languages  map[string]ColorMap `json:"languages"`
+	Foreground     Color               `json:"foreground"`
+	Background     Color               `json:"background"`
+	StatusBar      Color               `json:"status_bar"`
+	MatchHighlight Color               `json:"match_highlight"`
+	Languages      map[string]ColorMap `json:"languages"`
 }
 
 type KeyBindings struct {
@@ -75,10 +76,11 @@ type Config struct {
 func NewDefault() *Config {
 	return &Config{
 		Colors: Colors{
-			Foreground: DefaultColorForeground(),
-			Background: DefaultColorBackground(),
-			StatusBar:  DefaultColorStatusBar(),
-			Languages:  DefaultLanguagesColorMap(),
+			Foreground:     DefaultColorForeground(),
+			Background:     DefaultColorBackground(),
+			StatusBar:      DefaultColorStatusBar(),
+			MatchHighlight: DefaultColorMatchHighlight(),
+			Languages:      DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
 			Quit: DefaultKeyBindingsQuit(),

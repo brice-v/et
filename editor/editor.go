@@ -55,8 +55,15 @@ type Editor struct {
 	promptInput []rune
 	promptMode  promptMode
 
+	hlMatches []matchPos
+
 	// Exit is a flag to trigger exit
 	Exit bool
+}
+
+type matchPos struct {
+	line int
+	col  int
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
@@ -80,54 +87,66 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 	}
 }
 
-func (et *Editor) HandlePromptMode() {
-	if et.promptMode == promptModeNormal {
+func (e *Editor) HandlePromptMode() {
+	if e.promptMode == promptModeNormal {
 		return
 	}
 
-	switch et.promptMode {
+	switch e.promptMode {
 	case promptModeFind:
-		input := string(et.promptInput)
+		input := string(e.promptInput)
 		if input == "" {
-			et.vScrollOffset = et.savedVScrollOffset
-			et.hScrollOffset = et.savedHScrollOffset
-			et.foundCx = -1
+			e.vScrollOffset = e.savedVScrollOffset
+			e.hScrollOffset = e.savedHScrollOffset
+			e.foundCx = -1
 			return
 		}
-		et.findMatches(input)
+		e.findMatches(input)
 	default:
-		slog.Warn("unknown promptMode", "promptMode", et.promptMode)
+		slog.Warn("unknown promptMode", "promptMode", e.promptMode)
 	}
 }
 
-func (et *Editor) findMatches(input string) {
-	for lineNo, line := range et.buffer.lines {
+func (e *Editor) findMatches(input string) {
+	if e.hlMatches == nil || len(e.hlMatches) != 0 {
+		e.hlMatches = []matchPos{}
+	}
+	for lineNo, line := range e.buffer.lines {
 		lineText := string(line)
 		// TODO: Update to support ignore case and regex
 		n := strings.Index(lineText, input)
 		if n == -1 {
 			continue
 		}
-		et.displayFound(lineNo, n)
+		e.displayFound(lineNo, n)
 	}
-	// TODO: Highlight matches on screen
+	first, last := e.visibleLines()
+	for i := first; i <= last; i++ {
+		line := e.buffer.Line(i)
+		lineText := string(line)
+		// TODO: Update to support ignore case and regex
+		n := strings.Index(lineText, input)
+		if n != -1 {
+			e.hlMatches = append(e.hlMatches, matchPos{line: i, col: n})
+		}
+	}
 }
 
-func (et *Editor) displayFound(lineNo, col int) {
-	vh := et.sh - et.sbh
+func (e *Editor) displayFound(lineNo, col int) {
+	vh := e.sh - e.sbh
 	if vh <= 0 {
 		return
 	}
 
-	savedCy, savedCx := et.cy, et.cx
+	savedCy, savedCx := e.cy, e.cx
 
-	et.vScrollOffset = max(0, lineNo-vh/2)
-	et.cy = lineNo - et.vScrollOffset
-	et.stickyCol = col
-	et.adjustViewport()
-	et.clampCursorPos()
+	e.vScrollOffset = max(0, lineNo-vh/2)
+	e.cy = lineNo - e.vScrollOffset
+	e.stickyCol = col
+	e.adjustViewport()
+	e.clampCursorPos()
 
-	et.foundCx, et.foundCy = et.cx, et.cy
+	e.foundCx, e.foundCy = e.cx, e.cy
 
-	et.cy, et.cx = savedCy, savedCx
+	e.cy, e.cx = savedCy, savedCx
 }

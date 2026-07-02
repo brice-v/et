@@ -55,14 +55,50 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 	}
 }
 
+func (e *Editor) visibleLines() (first, last int) {
+	first = e.vScrollOffset
+	last = e.vScrollOffset + (e.sh - e.sbh) - 1
+	return first, last
+}
+
+func (e *Editor) visibleLineAt(screenLineIdx int) int {
+	return e.vScrollOffset + screenLineIdx
+}
+
+func (e *Editor) screenLineAt(fileLine int) int {
+	return fileLine - e.vScrollOffset
+}
+
 func (e *Editor) drawContent() {
 	numLines := e.buffer.NumLines()
-	lastLine := e.vScrollOffset + (e.sh - e.sbh) - 1
-	for fileLine := e.vScrollOffset; fileLine <= lastLine && fileLine < numLines; fileLine++ {
-		screenLine := fileLine - e.vScrollOffset
+	firstLine, lastLine := e.visibleLines()
+	for fileLine := firstLine; fileLine <= lastLine && fileLine < numLines; fileLine++ {
+		screenLine := e.screenLineAt(fileLine)
 		line := e.buffer.Line(fileLine)
 		e.drawLine(screenLine, line)
 		e.updateLineHighlight(screenLine, line)
+	}
+}
+
+func (e *Editor) drawMatches() {
+	matchLen := len(e.promptInput)
+	if len(e.hlMatches) == 0 || matchLen == 0 {
+		return
+	}
+	for _, m := range e.hlMatches {
+		line := e.screenLineAt(m.line)
+		fileLine := e.buffer.Line(m.line)
+		col := fileToVisualCol(fileLine, m.col, e.cfg.TabWidth)
+		scrollCol := fileToVisualCol(fileLine, e.hScrollOffset, e.cfg.TabWidth)
+		x := e.lPad + col - scrollCol
+		for i, ch := range e.promptInput {
+			sx := x + i
+			if sx >= e.sw {
+				break
+			}
+			_, style, _ := e.s.Get(sx, line)
+			e.s.SetContent(sx, line, ch, nil, style.Background(e.cfg.Colors.MatchHighlight.Color))
+		}
 	}
 }
 
@@ -148,7 +184,7 @@ func (e *Editor) drawLineNumbersOrTilde() {
 	}
 	for y := range e.sh - e.sbh {
 		var ch []rune
-		fileLine := e.vScrollOffset + y
+		fileLine := e.visibleLineAt(y)
 		if useLineNums && fileLine < numLines {
 			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, fileLine+1))
 		} else {
@@ -185,6 +221,7 @@ func (e *Editor) Draw() {
 	e.drawLineNumbersOrTilde()
 	e.clampCursor()
 	e.drawContent()
+	e.drawMatches()
 	e.drawStatusBar()
 	e.drawPrompt()
 	e.drawWelcomeMessage()
