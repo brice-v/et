@@ -120,7 +120,7 @@ func (e *Editor) findMatches(input string) {
 		}
 		e.displayFound(lineNo, n)
 	}
-	first, last := e.visibleLines()
+	first, last := e.vLines()
 	for i := first; i <= last; i++ {
 		line := e.buffer.Line(i)
 		lineText := string(line)
@@ -133,10 +133,7 @@ func (e *Editor) findMatches(input string) {
 }
 
 func (e *Editor) displayFound(lineNo, col int) {
-	vh := e.sh - e.sbh
-	if vh <= 0 {
-		return
-	}
+	vh := e.vh()
 
 	savedCy, savedCx := e.cy, e.cx
 
@@ -149,4 +146,55 @@ func (e *Editor) displayFound(lineNo, col int) {
 	e.foundCx, e.foundCy = e.cx, e.cy
 
 	e.cy, e.cx = savedCy, savedCx
+}
+
+// Generic Helpers
+
+func (e *Editor) vy(bufY int) int {
+	return bufY - e.vScrollOffset
+}
+
+func (e *Editor) vx(bufLine, bufX int) int {
+	if bufLine < 0 || bufLine >= e.buffer.NumLines() {
+		return e.lPad
+	}
+	line := e.buffer.Line(bufLine)
+	return e.lPad + e.visualCol(line, bufX) - e.visualCol(line, e.hScrollOffset)
+}
+
+func (e *Editor) vh() int {
+	return e.sh - e.sbh
+}
+
+func (e *Editor) vLines() (first, last int) {
+	first = e.vScrollOffset
+	last = e.vScrollOffset + e.vh() - 1
+	if n := e.buffer.NumLines(); last >= n {
+		last = n - 1
+	}
+	return first, last
+}
+
+func (e *Editor) inContent(x int) bool {
+	return x >= e.lPad && x < e.sw
+}
+
+func (e *Editor) inView(y int) bool {
+	return y >= 0 && y < e.vh()
+}
+
+func (e *Editor) bufX(bufLine, vx int) int {
+	if bufLine < 0 || bufLine >= e.buffer.NumLines() {
+		return 0
+	}
+	line := e.buffer.Line(bufLine)
+	visualCol := vx - e.lPad + e.visualCol(line, e.hScrollOffset)
+	if visualCol < 0 {
+		return 0
+	}
+	return e.fileCol(line, visualCol)
+}
+
+func (e *Editor) bufY(vy int) int {
+	return e.vScrollOffset + vy
 }

@@ -60,6 +60,7 @@ func New(input []rune, idents map[string]consts.HlStyleType, operators string,
 		stringTokens: st,
 	}
 	l.readChar()
+	l.posInLine = 0
 	return l
 }
 

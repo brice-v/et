@@ -31,11 +31,10 @@ func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
 	}
 }
 
-func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
+func (e *Editor) updateLineHighlight(bufL, lineNumberOnScreen int, line []rune) {
 	if e.cfg.DisableHighlighting || e.hl == nil {
 		return
 	}
-	offset := e.lPad - 1
 	l := e.hl.newLexer(line)
 	for tok := l.NextToken(); tok.Type != lexer.TTEof; tok = l.NextToken() {
 		if tok.Type == lexer.TTIllegal {
@@ -45,55 +44,39 @@ func (e *Editor) updateLineHighlight(lineNumberOnScreen int, line []rune) {
 		if hlStyle == nil {
 			continue
 		}
-		twOffset := 0
-		if l.TabCount != 0 {
-			twOffset = l.TabCount*e.cfg.TabWidth - l.TabCount
-		}
+		x := e.vx(bufL, tok.Position)
 		for i, ch := range tok.Literal {
-			e.s.SetContent(tok.Position+offset+twOffset+i, lineNumberOnScreen, ch, nil, *hlStyle)
+			sx := x + i
+			if !e.inContent(sx) {
+				break
+			}
+			e.s.SetContent(sx, lineNumberOnScreen, ch, nil, *hlStyle)
 		}
 	}
 }
 
-func (e *Editor) visibleLines() (first, last int) {
-	first = e.vScrollOffset
-	last = e.vScrollOffset + (e.sh - e.sbh) - 1
-	return first, last
-}
-
-func (e *Editor) visibleLineAt(screenLineIdx int) int {
-	return e.vScrollOffset + screenLineIdx
-}
-
-func (e *Editor) screenLineAt(fileLine int) int {
-	return fileLine - e.vScrollOffset
-}
-
 func (e *Editor) drawContent() {
-	numLines := e.buffer.NumLines()
-	firstLine, lastLine := e.visibleLines()
-	for fileLine := firstLine; fileLine <= lastLine && fileLine < numLines; fileLine++ {
-		screenLine := e.screenLineAt(fileLine)
-		line := e.buffer.Line(fileLine)
+	for bufL, last := e.vLines(); bufL <= last; bufL++ {
+		screenLine := e.vy(bufL)
+		line := e.buffer.Line(bufL)
 		e.drawLine(screenLine, line)
-		e.updateLineHighlight(screenLine, line)
+		e.updateLineHighlight(bufL, screenLine, line)
 	}
 }
 
 func (e *Editor) drawMatches() {
-	matchLen := len(e.promptInput)
-	if len(e.hlMatches) == 0 || matchLen == 0 {
+	if len(e.hlMatches) == 0 || len(e.promptInput) == 0 {
 		return
 	}
 	for _, m := range e.hlMatches {
-		line := e.screenLineAt(m.line)
-		fileLine := e.buffer.Line(m.line)
-		col := fileToVisualCol(fileLine, m.col, e.cfg.TabWidth)
-		scrollCol := fileToVisualCol(fileLine, e.hScrollOffset, e.cfg.TabWidth)
-		x := e.lPad + col - scrollCol
+		line := e.vy(m.line)
+		if !e.inView(line) {
+			continue
+		}
+		x := e.vx(m.line, m.col)
 		for i, ch := range e.promptInput {
 			sx := x + i
-			if sx >= e.sw {
+			if !e.inContent(sx) {
 				break
 			}
 			_, style, _ := e.s.Get(sx, line)
@@ -104,7 +87,7 @@ func (e *Editor) drawMatches() {
 
 func (e *Editor) drawStatusBar() {
 	statusStyle := e.baseStyle.Background(e.cfg.Colors.StatusBar.Color)
-	statusBarH := e.sh - e.sbh
+	statusBarH := e.vh()
 	for x := range e.sw {
 		e.s.SetContent(x, statusBarH, ' ', nil, statusStyle)
 	}
@@ -182,11 +165,11 @@ func (e *Editor) drawLineNumbersOrTilde() {
 	} else {
 		e.lPad = len(tilde) + 1
 	}
-	for y := range e.sh - e.sbh {
+	for y := range e.vh() {
 		var ch []rune
-		fileLine := e.visibleLineAt(y)
-		if useLineNums && fileLine < numLines {
-			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, fileLine+1))
+		bufL := e.bufY(y)
+		if useLineNums && bufL < numLines {
+			ch = []rune(fmt.Sprintf("%*d ", e.lPad-1, bufL+1))
 		} else {
 			ch = tilde
 		}

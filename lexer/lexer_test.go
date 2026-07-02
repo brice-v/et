@@ -537,9 +537,9 @@ func TestNextTokenPositionTracking(t *testing.T) {
 		literal  string
 		position int
 	}{
-		{"a", 1},
-		{"bb", 3},
-		{"ccc", 6},
+		{"a", 0},
+		{"bb", 2},
+		{"ccc", 5},
 	}
 
 	for _, tt := range tests {

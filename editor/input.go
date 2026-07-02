@@ -8,12 +8,12 @@ import (
 	"github.com/gdamore/tcell/v3"
 )
 
-func fileToVisualCol(line []rune, fileCol int, tabWidth int) int {
+func (e *Editor) visualCol(line []rune, fileCol int) int {
 	col := 0
 	max := min(fileCol, len(line))
 	for i := range max {
 		if line[i] == '\t' {
-			col += tabWidth
+			col += e.cfg.TabWidth
 		} else {
 			col++
 		}
@@ -21,14 +21,14 @@ func fileToVisualCol(line []rune, fileCol int, tabWidth int) int {
 	return col
 }
 
-func visualToFileCol(line []rune, visualCol int, tabWidth int) int {
+func (e *Editor) fileCol(line []rune, visualCol int) int {
 	col := 0
 	for fc := range line {
 		if line[fc] == '\t' {
-			if visualCol < col+tabWidth {
+			if visualCol < col+e.cfg.TabWidth {
 				return fc
 			}
-			col += tabWidth
+			col += e.cfg.TabWidth
 		} else {
 			if col >= visualCol {
 				return fc
@@ -40,13 +40,7 @@ func visualToFileCol(line []rune, visualCol int, tabWidth int) int {
 }
 
 func (e *Editor) currentFileCol() int {
-	fileLine := e.vScrollOffset + e.cy
-	if fileLine < 0 || fileLine >= e.buffer.NumLines() {
-		return 0
-	}
-	line := e.buffer.Line(fileLine)
-	visualCol := fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth) + (e.cx - e.lPad)
-	return visualToFileCol(line, visualCol, e.cfg.TabWidth)
+	return e.bufX(e.bufY(e.cy), e.cx)
 }
 
 func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
@@ -115,8 +109,8 @@ func (e *Editor) handleMoveLeft() {
 		return
 	}
 	fc := e.currentFileCol()
-	fileLine := e.vScrollOffset + e.cy
-	if fc <= 0 && fileLine > 0 {
+	bufL := e.vScrollOffset + e.cy
+	if fc <= 0 && bufL > 0 {
 		e.cy--
 		e.stickyCol = consts.StickyColMax
 	} else if fc > 0 {
@@ -133,8 +127,8 @@ func (e *Editor) handleMoveRight() {
 		return
 	}
 	fc := e.currentFileCol()
-	fileLine := e.vScrollOffset + e.cy
-	if fileLine >= 0 && fileLine < e.buffer.NumLines() && fc >= len(e.buffer.Line(fileLine)) {
+	bufL := e.vScrollOffset + e.cy
+	if bufL >= 0 && bufL < e.buffer.NumLines() && fc >= len(e.buffer.Line(bufL)) {
 		e.cy++
 		e.stickyCol = 0
 	} else {
@@ -147,8 +141,8 @@ func (e *Editor) syncStickyCol() {
 		// TODO: What should happen here
 		return
 	}
-	fileLine := e.vScrollOffset + e.cy
-	if fileLine >= 0 && fileLine < e.buffer.NumLines() {
+	bufL := e.vScrollOffset + e.cy
+	if bufL >= 0 && bufL < e.buffer.NumLines() {
 		e.stickyCol = e.currentFileCol()
 	}
 }
@@ -164,38 +158,27 @@ func (e *Editor) clampCursorPos() {
 	if e.cx < e.lPad {
 		e.cx = e.lPad
 	}
-	fileLine := max(e.vScrollOffset+e.cy, 0)
-	if fileLine >= numLines {
-		fileLine = numLines - 1
+	bufL := max(e.vScrollOffset+e.cy, 0)
+	if bufL >= numLines {
+		bufL = numLines - 1
 	}
-	line := e.buffer.Line(fileLine)
-	lineLen := len(line)
+	line := e.buffer.Line(bufL)
+	fc := max(min(e.stickyCol, len(line)), 0)
+	vc := e.visualCol(line, fc)
 
-	fc := max(min(e.stickyCol, lineLen), 0)
-
-	// Convert file column to visual column, accounting for tab expansion
-	vc := fileToVisualCol(line, fc, e.cfg.TabWidth)
-	scrollVisual := fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth)
-
-	// Adjust horizontal scroll to keep cursor visible on screen
-	textAreaWidth := e.sw - e.lPad
-	if textAreaWidth > 0 {
-		if vc >= scrollVisual+textAreaWidth {
-			targetVisual := vc - (textAreaWidth - 1)
-			e.hScrollOffset = visualToFileCol(line, targetVisual, e.cfg.TabWidth)
-			scrollVisual = fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth)
+	if textAreaWidth := e.sw - e.lPad; textAreaWidth > 0 {
+		scrollVisual := e.visualCol(line, e.hScrollOffset)
+		if vc < scrollVisual {
+			scrollVisual = vc
+		} else if vc >= scrollVisual+textAreaWidth {
+			scrollVisual = vc - (textAreaWidth - 1)
 		}
-	}
-	if vc < scrollVisual {
-		e.hScrollOffset = fc
-		scrollVisual = fileToVisualCol(line, e.hScrollOffset, e.cfg.TabWidth)
-	}
-	if e.hScrollOffset < 0 {
+		e.hScrollOffset = e.fileCol(line, max(scrollVisual, 0))
+	} else {
 		e.hScrollOffset = 0
-		scrollVisual = fileToVisualCol(line, 0, e.cfg.TabWidth)
 	}
 
-	e.cx = vc - scrollVisual + e.lPad
+	e.cx = e.vx(bufL, fc)
 }
 
 func (e *Editor) clampCursor() {
@@ -206,38 +189,22 @@ func (e *Editor) clampCursor() {
 }
 
 func (e *Editor) adjustViewport() {
-	vh := e.sh - e.sbh
-	if vh <= 0 {
+	vh := e.vh()
+	n := e.buffer.NumLines()
+	if vh <= 0 || n == 0 {
 		e.vScrollOffset = 0
 		e.cy = 0
 		return
 	}
 
-	// Keep cy on screen
-	if e.cy >= vh {
-		e.vScrollOffset += e.cy - vh + 1
-		e.cy = vh - 1
-	} else if e.cy < 0 {
-		e.vScrollOffset += e.cy
-		e.cy = 0
-	}
-	if e.vScrollOffset < 0 {
-		e.vScrollOffset = 0
-	}
+	// Desired file line, clamped to buffer
+	fl := max(0, min(e.vScrollOffset+e.cy, n-1))
+	e.cy = max(0, min(e.cy, vh-1))
+	e.vScrollOffset = fl - e.cy
 
-	// Keep cursor file line in bounds
-	n := e.buffer.NumLines()
-	if n > 0 {
-		if fileLine := e.vScrollOffset + e.cy; fileLine >= n {
-			e.vScrollOffset -= fileLine - n + 1
-			if e.vScrollOffset < 0 {
-				e.cy += e.vScrollOffset
-				e.vScrollOffset = 0
-			}
-		}
-	} else {
+	if e.vScrollOffset < 0 {
+		e.cy += e.vScrollOffset
 		e.vScrollOffset = 0
-		e.cy = 0
 	}
 }
 
@@ -263,10 +230,10 @@ func (e *Editor) handleInsertRune(r string) {
 		e.cx += len(runes)
 		return
 	}
-	fileLine := e.vScrollOffset + e.cy
+	bufL := e.vScrollOffset + e.cy
 	fc := e.currentFileCol()
 	for _, ch := range r {
-		e.buffer.InsertRune(fileLine, fc, ch)
+		e.buffer.InsertRune(bufL, fc, ch)
 		fc++
 	}
 	e.stickyCol = fc
@@ -279,9 +246,9 @@ func (e *Editor) handleEnter() {
 		e.exitPrompt()
 		return
 	}
-	fileLine := e.vScrollOffset + e.cy
+	bufL := e.vScrollOffset + e.cy
 	fc := e.currentFileCol()
-	e.buffer.SplitLine(fileLine, fc)
+	e.buffer.SplitLine(bufL, fc)
 	e.cy++
 	e.stickyCol = 0
 }
@@ -295,14 +262,14 @@ func (e *Editor) handleBackspace() {
 		}
 		return
 	}
-	fileLine := e.vScrollOffset + e.cy
+	bufL := e.vScrollOffset + e.cy
 	fc := e.currentFileCol()
 	if fc > 0 {
-		e.buffer.DeleteRune(fileLine, fc-1)
+		e.buffer.DeleteRune(bufL, fc-1)
 		e.stickyCol = fc - 1
-	} else if fileLine > 0 {
-		prevLineLen := len(e.buffer.Line(fileLine - 1))
-		e.buffer.JoinLine(fileLine - 1)
+	} else if bufL > 0 {
+		prevLineLen := len(e.buffer.Line(bufL - 1))
+		e.buffer.JoinLine(bufL - 1)
 		e.cy--
 		e.stickyCol = prevLineLen
 	}
@@ -316,12 +283,12 @@ func (e *Editor) handleDelete() {
 		}
 		return
 	}
-	fileLine := e.vScrollOffset + e.cy
+	bufL := e.vScrollOffset + e.cy
 	fc := e.currentFileCol()
-	if fileLine < e.buffer.NumLines() && fc < len(e.buffer.Line(fileLine)) {
-		e.buffer.DeleteRune(fileLine, fc)
-	} else if fileLine < e.buffer.NumLines()-1 {
-		e.buffer.JoinLine(fileLine)
+	if bufL < e.buffer.NumLines() && fc < len(e.buffer.Line(bufL)) {
+		e.buffer.DeleteRune(bufL, fc)
+	} else if bufL < e.buffer.NumLines()-1 {
+		e.buffer.JoinLine(bufL)
 	}
 }
 
