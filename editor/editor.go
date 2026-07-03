@@ -137,7 +137,7 @@ func (e *Editor) HandlePromptMode() {
 		}
 		e.findMatches(input)
 	default:
-		slog.Warn("unknown promptMode", "promptMode", e.promptMode)
+		slog.Warn("promptMode being used for HandlePromptMode not supported", "promptMode", e.promptMode.String())
 	}
 }
 
@@ -147,8 +147,7 @@ func (e *Editor) findMatches(input string) {
 	}
 	for lineNo, line := range e.buffer.lines {
 		lineText := string(line)
-		// TODO: Update to support ignore case and regex
-		n := strings.Index(lineText, input)
+		n := e.findIndex(lineText, input)
 		if n == -1 {
 			continue
 		}
@@ -158,11 +157,26 @@ func (e *Editor) findMatches(input string) {
 	for i := first; i <= last; i++ {
 		line := e.buffer.Line(i)
 		lineText := string(line)
-		// TODO: Update to support ignore case and regex
-		n := strings.Index(lineText, input)
+		n := e.findIndex(lineText, input)
 		if n != -1 {
 			e.hlMatches = append(e.hlMatches, matchPos{line: i, col: n})
 		}
+	}
+}
+
+func (e *Editor) findIndex(haystack, needle string) int {
+	switch e.findMode {
+	case findModeExact:
+		return strings.Index(haystack, needle)
+	case findModeIgnoreCase:
+		return strings.Index(strings.ToLower(haystack), strings.ToLower(needle))
+	case findModeRegex:
+		// TODO: Support regex
+		slog.Warn("regex find mode not yet supported")
+		return -1
+	default:
+		slog.Warn("incorrect find mode being used for findIndex", "findMode", e.findMode.String())
+		return -1
 	}
 }
 
