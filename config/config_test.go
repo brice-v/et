@@ -84,6 +84,47 @@ func TestKeyBindingsRoundTrip(t *testing.T) {
 	}
 }
 
+func TestFindNextPreviousKeyBindings(t *testing.T) {
+	jsonStr := `{"find_next": "tab", "find_previous": "backtab"}`
+
+	var kb KeyBindings
+	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
+		t.Fatal(err)
+	}
+
+	if kb.FindNext.Key != tcell.KeyTab {
+		t.Errorf("FindNext.Key = %v, want KeyTab", kb.FindNext.Key)
+	}
+	if kb.FindNext.Modifiers != tcell.ModNone {
+		t.Errorf("FindNext.Modifiers = %v, want ModNone", kb.FindNext.Modifiers)
+	}
+	if kb.FindPrevious.Key != tcell.KeyBacktab {
+		t.Errorf("FindPrevious.Key = %v, want KeyBacktab", kb.FindPrevious.Key)
+	}
+	if kb.FindPrevious.Modifiers != tcell.ModNone {
+		t.Errorf("FindPrevious.Modifiers = %v, want ModNone", kb.FindPrevious.Modifiers)
+	}
+}
+
+func TestDefaultCurrentMatchHighlight(t *testing.T) {
+	cfg := NewDefault()
+	want := DefaultColorCurrentMatchHighlight()
+	if cfg.Colors.CurrentMatchHighlight.Color != want.Color {
+		t.Errorf("CurrentMatchHighlight = %v, want %v", cfg.Colors.CurrentMatchHighlight, want)
+	}
+}
+
+func TestDefaultFindNextPreviousBindings(t *testing.T) {
+	kb := NewDefault().KeyBindings
+
+	if kb.FindNext.Key != tcell.KeyTab || kb.FindNext.Modifiers != tcell.ModNone {
+		t.Errorf("Default FindNext = %v, want tab", kb.FindNext)
+	}
+	if kb.FindPrevious.Key != tcell.KeyBacktab || kb.FindPrevious.Modifiers != tcell.ModNone {
+		t.Errorf("Default FindPrevious = %v, want backtab", kb.FindPrevious)
+	}
+}
+
 func TestKeyString(t *testing.T) {
 	tests := []struct {
 		name string
@@ -100,6 +141,8 @@ func TestKeyString(t *testing.T) {
 		{"ctrl+esc", Key{Key: tcell.KeyEscape, Modifiers: tcell.ModCtrl}, "ctrl+esc"},
 		{"enter", Key{Key: tcell.KeyEnter, Modifiers: tcell.ModNone}, "enter"},
 		{"ctrl+enter", Key{Key: tcell.KeyEnter, Modifiers: tcell.ModCtrl}, "ctrl+enter"},
+		{"tab", Key{Key: tcell.KeyTab, Modifiers: tcell.ModNone}, "tab"},
+		{"backtab", Key{Key: tcell.KeyBacktab, Modifiers: tcell.ModNone}, "backtab"},
 	}
 
 	for _, tt := range tests {
@@ -189,6 +232,9 @@ func TestParseModifierKeyBindings(t *testing.T) {
 		{"q", tcell.KeyQ, tcell.ModNone},
 		{"esc", tcell.KeyEscape, tcell.ModNone},
 		{"escape", tcell.KeyEscape, tcell.ModNone},
+		{"tab", tcell.KeyTab, tcell.ModNone},
+		{"backtab", tcell.KeyBacktab, tcell.ModNone},
+		{"shift+tab", tcell.KeyTab, tcell.ModShift},
 	}
 
 	for _, tt := range tests {

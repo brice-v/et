@@ -27,27 +27,6 @@ func (pm promptMode) String() string {
 	}
 }
 
-type findMode int
-
-const (
-	findModeExact findMode = iota
-	findModeIgnoreCase
-	findModeRegex
-)
-
-func (fm findMode) String() string {
-	switch fm {
-	case findModeExact:
-		return "exact"
-	case findModeIgnoreCase:
-		return "ignore case"
-	case findModeRegex:
-		return "regex"
-	default:
-		return fmt.Sprintf("unknown findMode: %d", fm)
-	}
-}
-
 type Editor struct {
 	s tcell.Screen
 	// sw, sh screen width and height, calculated every Draw
@@ -65,8 +44,7 @@ type Editor struct {
 	cx, cy int
 	// savedCx, savedCy are the saved cursor positions when prompted
 	savedCx, savedCy int
-	// foundCx, foundCy are the last search match screen position (-1 = no active match)
-	foundCx, foundCy int
+	Find             FindState
 	// vScrollOffset is the first visible line in the viewport
 	vScrollOffset int
 	// hScrollOffset is the first visible column in the viewport
@@ -88,16 +66,8 @@ type Editor struct {
 	promptInput []rune
 	promptMode  promptMode
 
-	findMode  findMode
-	hlMatches []matchPos
-
 	// Exit is a flag to trigger exit
 	Exit bool
-}
-
-type matchPos struct {
-	line int
-	col  int
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
@@ -132,68 +102,16 @@ func (e *Editor) HandlePromptMode() {
 		if input == "" {
 			e.vScrollOffset = e.savedVScrollOffset
 			e.hScrollOffset = e.savedHScrollOffset
-			e.foundCx = -1
+			e.Find.FoundCx = -1
 			return
 		}
-		e.findMatches(input)
+		if input != e.Find.LastSearchTerm {
+			e.Find.LastSearchTerm = input
+			e.findMatches(input)
+		}
 	default:
 		slog.Warn("promptMode being used for HandlePromptMode not supported", "promptMode", e.promptMode.String())
 	}
-}
-
-func (e *Editor) findMatches(input string) {
-	if e.hlMatches == nil || len(e.hlMatches) != 0 {
-		e.hlMatches = []matchPos{}
-	}
-	for lineNo, line := range e.buffer.lines {
-		lineText := string(line)
-		n := e.findIndex(lineText, input)
-		if n == -1 {
-			continue
-		}
-		e.displayFound(lineNo, n)
-	}
-	first, last := e.vLines()
-	for i := first; i <= last; i++ {
-		line := e.buffer.Line(i)
-		lineText := string(line)
-		n := e.findIndex(lineText, input)
-		if n != -1 {
-			e.hlMatches = append(e.hlMatches, matchPos{line: i, col: n})
-		}
-	}
-}
-
-func (e *Editor) findIndex(haystack, needle string) int {
-	switch e.findMode {
-	case findModeExact:
-		return strings.Index(haystack, needle)
-	case findModeIgnoreCase:
-		return strings.Index(strings.ToLower(haystack), strings.ToLower(needle))
-	case findModeRegex:
-		// TODO: Support regex
-		slog.Warn("regex find mode not yet supported")
-		return -1
-	default:
-		slog.Warn("incorrect find mode being used for findIndex", "findMode", e.findMode.String())
-		return -1
-	}
-}
-
-func (e *Editor) displayFound(lineNo, col int) {
-	vh := e.vh()
-
-	savedCy, savedCx := e.cy, e.cx
-
-	e.vScrollOffset = max(0, lineNo-vh/2)
-	e.cy = lineNo - e.vScrollOffset
-	e.stickyCol = col
-	e.adjustViewport()
-	e.clampCursorPos()
-
-	e.foundCx, e.foundCy = e.cx, e.cy
-
-	e.cy, e.cx = savedCy, savedCx
 }
 
 // Generic Helpers
@@ -245,12 +163,4 @@ func (e *Editor) bufX(bufLine, vx int) int {
 
 func (e *Editor) bufY(vy int) int {
 	return e.vScrollOffset + vy
-}
-
-func (e *Editor) getPromptFindLabel() string {
-	return fmt.Sprintf("Search [%s] ([%s,%s,%s] to change modes):",
-		e.findMode.String(),
-		e.cfg.KeyBindings.Find.String(),
-		e.cfg.KeyBindings.FindSecondary1.String(),
-		e.cfg.KeyBindings.FindSecondary2.String())
 }

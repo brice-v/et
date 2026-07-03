@@ -35,11 +35,12 @@ type ColorMap struct {
 }
 
 type Colors struct {
-	Foreground     Color               `json:"foreground"`
-	Background     Color               `json:"background"`
-	StatusBar      Color               `json:"status_bar"`
-	MatchHighlight Color               `json:"match_highlight"`
-	Languages      map[string]ColorMap `json:"languages"`
+	Foreground            Color               `json:"foreground"`
+	Background            Color               `json:"background"`
+	StatusBar             Color               `json:"status_bar"`
+	MatchHighlight        Color               `json:"match_highlight"`
+	CurrentMatchHighlight Color               `json:"current_match_highlight"`
+	Languages             map[string]ColorMap `json:"languages"`
 }
 
 type KeyBindings struct {
@@ -48,6 +49,8 @@ type KeyBindings struct {
 	Find           Key `json:"find"`
 	FindSecondary1 Key `json:"find_secondary1"`
 	FindSecondary2 Key `json:"find_secondary2"`
+	FindNext       Key `json:"find_next"`
+	FindPrevious   Key `json:"find_previous"`
 }
 
 type Config struct {
@@ -65,11 +68,12 @@ type Config struct {
 func NewDefault() *Config {
 	return &Config{
 		Colors: Colors{
-			Foreground:     DefaultColorForeground(),
-			Background:     DefaultColorBackground(),
-			StatusBar:      DefaultColorStatusBar(),
-			MatchHighlight: DefaultColorMatchHighlight(),
-			Languages:      DefaultLanguagesColorMap(),
+			Foreground:            DefaultColorForeground(),
+			Background:            DefaultColorBackground(),
+			StatusBar:             DefaultColorStatusBar(),
+			MatchHighlight:        DefaultColorMatchHighlight(),
+			CurrentMatchHighlight: DefaultColorCurrentMatchHighlight(),
+			Languages:             DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
 			Quit:           DefaultKeyBindingQuit(),
@@ -77,6 +81,8 @@ func NewDefault() *Config {
 			Find:           DefaultKeyBindingFind(),
 			FindSecondary1: DefaultKeyBindingFindSecondary1(),
 			FindSecondary2: DefaultKeyBindingFindSecondary2(),
+			FindNext:       DefaultKeyBindingFindNext(),
+			FindPrevious:   DefaultKeyBindingFindPrevious(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),

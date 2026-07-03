@@ -64,8 +64,10 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		e.handleBackspace()
 	case tcell.KeyDelete:
 		e.handleDelete()
-	case tcell.KeyTab:
-		e.handleInsertRune("\t")
+	case tcell.KeyTab, tcell.KeyBacktab:
+		if e.promptMode == promptModeNormal {
+			e.handleInsertRune("\t")
+		}
 	}
 	e.updateViewport()
 	e.clampCursor()
@@ -89,16 +91,24 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		if e.promptMode == promptModeFind {
 			switchToDefault := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find)
 			if switchToDefault {
-				e.findMode = findModeExact
+				e.Find.Mode = findModeExact
 			} else if switchToSecondary1 {
-				e.findMode = findModeIgnoreCase
+				e.Find.Mode = findModeIgnoreCase
 			} else if switchToSecondary2 {
-				e.findMode = findModeRegex
+				e.Find.Mode = findModeRegex
 			}
+			e.Find.LastSearchTerm = ""
 			e.updatePromptLabel(e.getPromptFindLabel())
 		} else if !switchToSecondary1 && !switchToSecondary2 {
 			e.promptMode = promptModeFind
 			e.prompt(e.getPromptFindLabel())
+		}
+	} else if e.promptMode == promptModeFind && keys.IsKeyAny(key, keyAsRune, k.Modifiers(), []config.Key{e.cfg.KeyBindings.FindNext, e.cfg.KeyBindings.FindPrevious}) {
+		isPrev := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindPrevious)
+		if isPrev {
+			e.findPreviousMatch()
+		} else {
+			e.findNextMatch()
 		}
 	}
 }
@@ -317,7 +327,7 @@ func (e *Editor) updatePromptLabel(label string) {
 func (e *Editor) prompt(label string) {
 	e.savedCx, e.savedCy = e.cx, e.cy
 	e.savedVScrollOffset, e.savedHScrollOffset = e.vScrollOffset, e.hScrollOffset
-	e.foundCx = -1
+	e.Find.FoundCx = -1
 	e.sbh++
 	e.updatePromptLabel(label)
 	e.promptInput = []rune{}
@@ -329,8 +339,8 @@ func (e *Editor) exitPrompt() {
 	e.sbh--
 	e.promptLabel = nil
 	e.promptInput = nil
-	if e.foundCx >= 0 {
-		e.cx, e.cy = e.foundCx, e.foundCy
+	if e.Find.FoundCx >= 0 {
+		e.cx, e.cy = e.Find.FoundCx, e.Find.FoundCy
 	} else {
 		e.cx, e.cy = e.savedCx, e.savedCy
 	}

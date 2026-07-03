@@ -65,22 +65,26 @@ func (e *Editor) drawContent() {
 }
 
 func (e *Editor) drawMatches() {
-	if len(e.hlMatches) == 0 || len(e.promptInput) == 0 {
+	if len(e.Find.Matches) == 0 || len(e.promptInput) == 0 {
 		return
 	}
-	for _, m := range e.hlMatches {
+	for idx, m := range e.Find.Matches {
 		line := e.vy(m.line)
 		if !e.inView(line) {
 			continue
 		}
 		x := e.vx(m.line, m.col)
+		bgColor := e.cfg.Colors.MatchHighlight.Color
+		if idx == e.Find.CurrentMatchIdx {
+			bgColor = e.cfg.Colors.CurrentMatchHighlight.Color
+		}
 		for i, ch := range e.promptInput {
 			sx := x + i
 			if !e.inContent(sx) {
 				break
 			}
 			_, style, _ := e.s.Get(sx, line)
-			e.s.SetContent(sx, line, ch, nil, style.Background(e.cfg.Colors.MatchHighlight.Color))
+			e.s.SetContent(sx, line, ch, nil, style.Background(bgColor))
 		}
 	}
 }

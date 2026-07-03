@@ -21,6 +21,10 @@ func DefaultColorMatchHighlight() Color {
 	return Color{color.NewRGBColor(96, 94, 104)}
 }
 
+func DefaultColorCurrentMatchHighlight() Color {
+	return Color{color.NewRGBColor(200, 150, 50)}
+}
+
 func DefaultTabWidth() int {
 	return 4
 }
@@ -51,6 +55,14 @@ func DefaultKeyBindingFindSecondary1() Key {
 
 func DefaultKeyBindingFindSecondary2() Key {
 	return Key{Key: tcell.KeyG, Modifiers: tcell.ModCtrl}
+}
+
+func DefaultKeyBindingFindNext() Key {
+	return Key{Key: tcell.KeyTab, Modifiers: tcell.ModNone}
+}
+
+func DefaultKeyBindingFindPrevious() Key {
+	return Key{Key: tcell.KeyBacktab, Modifiers: tcell.ModNone}
 }
 
 func DefaultLanguagesColorMap() map[string]ColorMap {
