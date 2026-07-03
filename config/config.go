@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
@@ -44,21 +43,11 @@ type Colors struct {
 }
 
 type KeyBindings struct {
-	Quit []Key `json:"quit"`
-	Find Key   `json:"find"`
-}
-
-func (c *Config) GetQuitKeyBindingsAsStr() string {
-	var s strings.Builder
-	s.WriteByte('[')
-	for i, k := range c.KeyBindings.Quit {
-		s.WriteString(k.String())
-		if i != len(c.KeyBindings.Quit)-1 {
-			s.WriteByte(',')
-		}
-	}
-	s.WriteByte(']')
-	return s.String()
+	Quit           Key `json:"quit"`
+	ExitPrompt     Key `json:"exit_prompt"`
+	Find           Key `json:"find"`
+	FindSecondary1 Key `json:"find_secondary1"`
+	FindSecondary2 Key `json:"find_secondary2"`
 }
 
 type Config struct {
@@ -83,8 +72,11 @@ func NewDefault() *Config {
 			Languages:      DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
-			Quit: DefaultKeyBindingsQuit(),
-			Find: DefaultKeyBindingFind(),
+			Quit:           DefaultKeyBindingQuit(),
+			ExitPrompt:     DefaultKeyBindingExitPrompt(),
+			Find:           DefaultKeyBindingFind(),
+			FindSecondary1: DefaultKeyBindingFindSecondary1(),
+			FindSecondary2: DefaultKeyBindingFindSecondary2(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),

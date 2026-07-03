@@ -69,25 +69,18 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestKeyBindingsRoundTrip(t *testing.T) {
-	jsonStr := `{"quit": ["ctrl+q", "esc"]}`
+	jsonStr := `{"quit": "ctrl+q"}`
 
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
 
-	if len(kb.Quit) != 2 {
-		t.Fatalf("len(Quit) = %d, want 2", len(kb.Quit))
+	if kb.Quit.Key != tcell.KeyQ {
+		t.Errorf("Quit.Key = %v, want KeyQ", kb.Quit.Key)
 	}
-
-	want := NewDefault().KeyBindings
-	for i := range want.Quit {
-		if kb.Quit[i].Key != want.Quit[i].Key {
-			t.Errorf("Quit[%d].Key = %v, want %v", i, kb.Quit[i].Key, want.Quit[i].Key)
-		}
-		if kb.Quit[i].Modifiers != want.Quit[i].Modifiers {
-			t.Errorf("Quit[%d].Modifiers = %v, want %v", i, kb.Quit[i].Modifiers, want.Quit[i].Modifiers)
-		}
+	if kb.Quit.Modifiers != tcell.ModCtrl {
+		t.Errorf("Quit.Modifiers = %v, want ModCtrl", kb.Quit.Modifiers)
 	}
 }
 
@@ -105,8 +98,8 @@ func TestKeyString(t *testing.T) {
 		{"ctrl+shift+alt+q", Key{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl | tcell.ModShift | tcell.ModAlt}, "ctrl+shift+alt+q"},
 		{"esc", Key{Key: tcell.KeyEscape, Modifiers: tcell.ModNone}, "esc"},
 		{"ctrl+esc", Key{Key: tcell.KeyEscape, Modifiers: tcell.ModCtrl}, "ctrl+esc"},
-		{"unknown", Key{Key: tcell.KeyEnter, Modifiers: tcell.ModNone}, ""},
-		{"unknown_with_mod", Key{Key: tcell.KeyEnter, Modifiers: tcell.ModCtrl}, ""},
+		{"enter", Key{Key: tcell.KeyEnter, Modifiers: tcell.ModNone}, "enter"},
+		{"ctrl+enter", Key{Key: tcell.KeyEnter, Modifiers: tcell.ModCtrl}, "ctrl+enter"},
 	}
 
 	for _, tt := range tests {
@@ -240,16 +233,11 @@ func TestParseFile(t *testing.T) {
 	if cfg.ShowLineNumbers != want.ShowLineNumbers {
 		t.Errorf("ShowLineNumbers = %t, want %t", cfg.ShowLineNumbers, want.ShowLineNumbers)
 	}
-	if len(cfg.KeyBindings.Quit) != len(want.KeyBindings.Quit) {
-		t.Fatalf("len(Quit) = %d, want %d", len(cfg.KeyBindings.Quit), len(want.KeyBindings.Quit))
+	if cfg.KeyBindings.Quit.Key != want.KeyBindings.Quit.Key {
+		t.Errorf("Quit.Key = %v, want %v", cfg.KeyBindings.Quit.Key, want.KeyBindings.Quit.Key)
 	}
-	for i := range want.KeyBindings.Quit {
-		if cfg.KeyBindings.Quit[i].Key != want.KeyBindings.Quit[i].Key {
-			t.Errorf("Quit[%d].Key = %v, want %v", i, cfg.KeyBindings.Quit[i].Key, want.KeyBindings.Quit[i].Key)
-		}
-		if cfg.KeyBindings.Quit[i].Modifiers != want.KeyBindings.Quit[i].Modifiers {
-			t.Errorf("Quit[%d].Modifiers = %v, want %v", i, cfg.KeyBindings.Quit[i].Modifiers, want.KeyBindings.Quit[i].Modifiers)
-		}
+	if cfg.KeyBindings.Quit.Modifiers != want.KeyBindings.Quit.Modifiers {
+		t.Errorf("Quit.Modifiers = %v, want %v", cfg.KeyBindings.Quit.Modifiers, want.KeyBindings.Quit.Modifiers)
 	}
 	if len(cfg.FileExtensions) != len(want.FileExtensions) {
 		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
@@ -287,16 +275,11 @@ func TestParseMinimalDefaults(t *testing.T) {
 	if cfg.LeftPadString != want.LeftPadString {
 		t.Errorf("LeftPadString = %q, want default %q", cfg.LeftPadString, want.LeftPadString)
 	}
-	if len(cfg.KeyBindings.Quit) != len(want.KeyBindings.Quit) {
-		t.Fatalf("len(Quit) = %d, want %d", len(cfg.KeyBindings.Quit), len(want.KeyBindings.Quit))
+	if cfg.KeyBindings.Quit.Key != want.KeyBindings.Quit.Key {
+		t.Errorf("Quit.Key = %v, want default %v", cfg.KeyBindings.Quit.Key, want.KeyBindings.Quit.Key)
 	}
-	for i := range want.KeyBindings.Quit {
-		if cfg.KeyBindings.Quit[i].Key != want.KeyBindings.Quit[i].Key {
-			t.Errorf("Quit[%d].Key = %v, want default %v", i, cfg.KeyBindings.Quit[i].Key, want.KeyBindings.Quit[i].Key)
-		}
-		if cfg.KeyBindings.Quit[i].Modifiers != want.KeyBindings.Quit[i].Modifiers {
-			t.Errorf("Quit[%d].Modifiers = %v, want default %v", i, cfg.KeyBindings.Quit[i].Modifiers, want.KeyBindings.Quit[i].Modifiers)
-		}
+	if cfg.KeyBindings.Quit.Modifiers != want.KeyBindings.Quit.Modifiers {
+		t.Errorf("Quit.Modifiers = %v, want default %v", cfg.KeyBindings.Quit.Modifiers, want.KeyBindings.Quit.Modifiers)
 	}
 	if len(cfg.FileExtensions) != len(want.FileExtensions) {
 		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
@@ -527,22 +510,6 @@ func TestDisableHighlighting(t *testing.T) {
 	if cfg2.DisableHighlighting != true {
 		t.Errorf("DisableHighlighting = %t, want true", cfg2.DisableHighlighting)
 	}
-
-	// Round-trip marshal should fail on zero-value KeyBindings,
-	// which is the expected behavior — use Parse() for full round-trips.
-	_, err := json.Marshal(cfg2)
-	if err == nil {
-		t.Error("expected error marshalling Config with zero-value KeyBindings")
-	}
-}
-
-func TestGetQuitKeyBindingsAsStr(t *testing.T) {
-	cfg := NewDefault()
-	got := cfg.GetQuitKeyBindingsAsStr()
-	want := "[ctrl+q,esc]"
-	if got != want {
-		t.Errorf("GetQuitKeyBindingsAsStr() = %q, want %q", got, want)
-	}
 }
 
 func TestColorUnmarshalJSONError(t *testing.T) {
@@ -554,31 +521,21 @@ func TestColorUnmarshalJSONError(t *testing.T) {
 }
 
 func TestKeyBindingsRoundTripWithModifier(t *testing.T) {
-	jsonStr := `{"quit": ["ctrl+shift+q", "ctrl+q", "q", "esc"]}`
+	jsonStr := `{"quit": "ctrl+shift+q"}`
 
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
 
-	if len(kb.Quit) != 4 {
-		t.Fatalf("len(Quit) = %d, want 4", len(kb.Quit))
-	}
+	wantKey := tcell.KeyQ
+	wantMod := tcell.ModCtrl | tcell.ModShift
 
-	want := []Key{
-		{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl | tcell.ModShift},
-		{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl},
-		{Key: tcell.KeyQ, Modifiers: tcell.ModNone},
-		{Key: tcell.KeyEscape, Modifiers: tcell.ModNone},
+	if kb.Quit.Key != wantKey {
+		t.Errorf("Quit.Key = %v, want %v", kb.Quit.Key, wantKey)
 	}
-
-	for i := range want {
-		if kb.Quit[i].Key != want[i].Key {
-			t.Errorf("Quit[%d].Key = %v, want %v", i, kb.Quit[i].Key, want[i].Key)
-		}
-		if kb.Quit[i].Modifiers != want[i].Modifiers {
-			t.Errorf("Quit[%d].Modifiers = %v, want %v", i, kb.Quit[i].Modifiers, want[i].Modifiers)
-		}
+	if kb.Quit.Modifiers != wantMod {
+		t.Errorf("Quit.Modifiers = %v, want %v", kb.Quit.Modifiers, wantMod)
 	}
 }
 

@@ -2,6 +2,7 @@ package editor
 
 import (
 	"et/config"
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -14,6 +15,38 @@ const (
 	promptModeNormal promptMode = iota
 	promptModeFind
 )
+
+func (pm promptMode) String() string {
+	switch pm {
+	case promptModeNormal:
+		return "normal"
+	case promptModeFind:
+		return "find"
+	default:
+		return fmt.Sprintf("unknown promptMode: %d", pm)
+	}
+}
+
+type findMode int
+
+const (
+	findModeExact findMode = iota
+	findModeIgnoreCase
+	findModeRegex
+)
+
+func (fm findMode) String() string {
+	switch fm {
+	case findModeExact:
+		return "exact"
+	case findModeIgnoreCase:
+		return "ignore case"
+	case findModeRegex:
+		return "regex"
+	default:
+		return fmt.Sprintf("unknown findMode: %d", fm)
+	}
+}
 
 type Editor struct {
 	s tcell.Screen
@@ -55,6 +88,7 @@ type Editor struct {
 	promptInput []rune
 	promptMode  promptMode
 
+	findMode  findMode
 	hlMatches []matchPos
 
 	// Exit is a flag to trigger exit
@@ -197,4 +231,12 @@ func (e *Editor) bufX(bufLine, vx int) int {
 
 func (e *Editor) bufY(vy int) int {
 	return e.vScrollOffset + vy
+}
+
+func (e *Editor) getPromptFindLabel() string {
+	return fmt.Sprintf("Search [%s] ([%s,%s,%s] to change modes):",
+		e.findMode.String(),
+		e.cfg.KeyBindings.Find.String(),
+		e.cfg.KeyBindings.FindSecondary1.String(),
+		e.cfg.KeyBindings.FindSecondary2.String())
 }

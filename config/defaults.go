@@ -33,15 +33,24 @@ func DefaultShowLineNumbers() bool {
 	return true
 }
 
-func DefaultKeyBindingsQuit() []Key {
-	return []Key{
-		{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl},
-		{Key: tcell.KeyEscape, Modifiers: tcell.ModNone},
-	}
+func DefaultKeyBindingQuit() Key {
+	return Key{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl}
+}
+
+func DefaultKeyBindingExitPrompt() Key {
+	return Key{Key: tcell.KeyEscape, Modifiers: tcell.ModNone}
 }
 
 func DefaultKeyBindingFind() Key {
 	return Key{Key: tcell.KeyF, Modifiers: tcell.ModCtrl}
+}
+
+func DefaultKeyBindingFindSecondary1() Key {
+	return Key{Key: tcell.KeyI, Modifiers: tcell.ModCtrl}
+}
+
+func DefaultKeyBindingFindSecondary2() Key {
+	return Key{Key: tcell.KeyG, Modifiers: tcell.ModCtrl}
 }
 
 func DefaultLanguagesColorMap() map[string]ColorMap {

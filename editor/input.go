@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"et/config"
 	"et/consts"
 	"et/keys"
 	"log/slog"
@@ -71,16 +72,33 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	if key == tcell.KeyLeft || key == tcell.KeyRight {
 		e.syncStickyCol()
 	}
-	if keys.IsKeyAny(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
 		e.Exit = true
-	} else if key == tcell.KeyRune && !e.Exit {
+		return
+	}
+	if key == tcell.KeyRune {
 		e.handleInsertRune(keyAsRune)
-	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) {
+	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ExitPrompt) {
 		if e.promptLabel != nil {
 			e.exitPrompt()
-		} else {
+		}
+	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) ||
+		(e.promptMode == promptModeFind && keys.IsKeyAny(key, keyAsRune, k.Modifiers(), []config.Key{e.cfg.KeyBindings.FindSecondary1, e.cfg.KeyBindings.FindSecondary2})) {
+		switchToSecondary1 := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary1)
+		switchToSecondary2 := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary2)
+		if e.promptMode == promptModeFind {
+			switchToDefault := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find)
+			if switchToDefault {
+				e.findMode = findModeExact
+			} else if switchToSecondary1 {
+				e.findMode = findModeIgnoreCase
+			} else if switchToSecondary2 {
+				e.findMode = findModeRegex
+			}
+			e.updatePromptLabel(e.getPromptFindLabel())
+		} else if !switchToSecondary1 && !switchToSecondary2 {
 			e.promptMode = promptModeFind
-			e.prompt("Search:")
+			e.prompt(e.getPromptFindLabel())
 		}
 	}
 }
@@ -292,12 +310,16 @@ func (e *Editor) handleDelete() {
 	}
 }
 
+func (e *Editor) updatePromptLabel(label string) {
+	e.promptLabel = []rune(" " + label + " ")
+}
+
 func (e *Editor) prompt(label string) {
 	e.savedCx, e.savedCy = e.cx, e.cy
 	e.savedVScrollOffset, e.savedHScrollOffset = e.vScrollOffset, e.hScrollOffset
 	e.foundCx = -1
 	e.sbh++
-	e.promptLabel = []rune(" " + label + " ")
+	e.updatePromptLabel(label)
 	e.promptInput = []rune{}
 	e.cy = e.sh - 1
 	e.cx = len(e.promptLabel)

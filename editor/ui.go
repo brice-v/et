@@ -91,7 +91,7 @@ func (e *Editor) drawStatusBar() {
 	for x := range e.sw {
 		e.s.SetContent(x, statusBarH, ' ', nil, statusStyle)
 	}
-	quitKeyBindsString := e.cfg.GetQuitKeyBindingsAsStr()
+	quitKeyBindsString := e.cfg.KeyBindings.Quit.String()
 	fnameStr := e.fileName
 	if e.fileName == "" {
 		fnameStr = "<new file>"

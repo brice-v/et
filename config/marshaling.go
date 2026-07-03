@@ -35,16 +35,10 @@ func (k *Key) String() string {
 		parts = append(parts, "alt")
 	}
 	base := ""
-	// TODO: Need to handle this better
-	switch k.Key {
-	case tcell.KeyQ:
-		base = "q"
-	case tcell.KeyEscape:
-		base = "esc"
-	case tcell.KeyF:
-		base = "f"
-	default:
-		return ""
+	if keyName, ok := tcell.KeyNames[k.Key]; ok {
+		base = strings.ToLower(keyName)
+	} else if k.Key >= tcell.Key('a') && k.Key <= tcell.Key('z') {
+		base = string(rune(k.Key))
 	}
 	if len(parts) == 0 {
 		return base
@@ -67,6 +61,15 @@ func (k *Key) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+var keyNamesReverse map[string]tcell.Key
+
+func initKeyNamesReverse() {
+	keyNamesReverse = make(map[string]tcell.Key, len(tcell.KeyNames))
+	for k, v := range tcell.KeyNames {
+		keyNamesReverse[strings.ToLower(v)] = k
+	}
+}
+
 func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 	parts := strings.Split(s, "+")
 	if len(parts) == 0 {
@@ -76,7 +79,7 @@ func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 	var mod tcell.ModMask
 	var keyParts []string
 	for _, p := range parts {
-		switch p {
+		switch strings.ToLower(p) {
 		case "ctrl":
 			mod |= tcell.ModCtrl
 		case "shift":
@@ -92,21 +95,24 @@ func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
 		return 0, 0, fmt.Errorf("failed to parse %s as key binding", s)
 	}
 
-	keyStr := keyParts[0]
-	var key tcell.Key
-	// TODO: Need to handle this better
-	switch keyStr {
-	case "q":
-		key = tcell.KeyQ
-	case "esc", "escape":
-		key = tcell.KeyEscape
-	case "f":
-		key = tcell.KeyF
-	default:
-		return 0, 0, fmt.Errorf("failed to parse %s as tcell key", keyStr)
+	keyStr := strings.ToLower(strings.TrimSpace(keyParts[0]))
+	if keyStr == "escape" {
+		keyStr = "esc"
 	}
 
-	return key, mod, nil
+	if keyNamesReverse == nil {
+		initKeyNamesReverse()
+	}
+
+	if k, ok := keyNamesReverse[keyStr]; ok {
+		return k, mod, nil
+	}
+
+	if len(keyStr) == 1 {
+		return tcell.Key(keyStr[0]), mod, nil
+	}
+
+	return 0, 0, fmt.Errorf("failed to parse %s as key binding", s)
 }
 
 func (k Key) MarshalJSON() ([]byte, error) {
