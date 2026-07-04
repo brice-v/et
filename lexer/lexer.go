@@ -2,7 +2,7 @@ package lexer
 
 import (
 	"encoding/hex"
-	"et/consts"
+	"github.com/brice-v/et/consts"
 	"fmt"
 	"strings"
 	"unicode"

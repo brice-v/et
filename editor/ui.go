@@ -1,8 +1,8 @@
 package editor
 
 import (
-	"et/consts"
-	"et/lexer"
+	"github.com/brice-v/et/consts"
+	"github.com/brice-v/et/lexer"
 	"fmt"
 )
 

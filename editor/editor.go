@@ -1,7 +1,7 @@
 package editor
 
 import (
-	"et/config"
+	"github.com/brice-v/et/config"
 	"fmt"
 	"log/slog"
 	"strings"

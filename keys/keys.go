@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"et/config"
+	"github.com/brice-v/et/config"
 	"unicode"
 
 	"github.com/gdamore/tcell/v3"

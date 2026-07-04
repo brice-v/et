@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"et/consts"
+	"github.com/brice-v/et/consts"
 	"testing"
 )
 

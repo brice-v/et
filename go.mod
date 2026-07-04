@@ -1,4 +1,4 @@
-module et
+module github.com/brice-v/et
 
 go 1.26.4
 

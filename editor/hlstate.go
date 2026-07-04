@@ -1,9 +1,9 @@
 package editor
 
 import (
-	"et/config"
-	"et/consts"
-	"et/lexer"
+	"github.com/brice-v/et/config"
+	"github.com/brice-v/et/consts"
+	"github.com/brice-v/et/lexer"
 	"log/slog"
 
 	"github.com/gdamore/tcell/v3"

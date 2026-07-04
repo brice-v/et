@@ -1,9 +1,9 @@
 package main
 
 import (
-	"et/config"
-	"et/consts"
-	"et/editor"
+	"github.com/brice-v/et/config"
+	"github.com/brice-v/et/consts"
+	"github.com/brice-v/et/editor"
 	"flag"
 	"fmt"
 	"log"
