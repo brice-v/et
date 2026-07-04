@@ -1,10 +1,11 @@
 package editor
 
 import (
-	"github.com/brice-v/et/config"
 	"fmt"
 	"log/slog"
 	"strings"
+
+	"github.com/brice-v/et/config"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -68,6 +69,9 @@ type Editor struct {
 
 	// Exit is a flag to trigger exit
 	Exit bool
+
+	// awaitingChord is true after the chord prefix key has been pressed
+	awaitingChord bool
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {

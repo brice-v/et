@@ -1,10 +1,11 @@
 package editor
 
 import (
+	"log/slog"
+
 	"github.com/brice-v/et/config"
 	"github.com/brice-v/et/consts"
 	"github.com/brice-v/et/keys"
-	"log/slog"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -74,6 +75,33 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	if key == tcell.KeyLeft || key == tcell.KeyRight {
 		e.syncStickyCol()
 	}
+
+	if e.awaitingChord {
+		e.awaitingChord = false
+		if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ExitPrompt) {
+			return
+		}
+		if e.promptMode == promptModeFind {
+			if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary1Chord.Suffix) {
+				e.Find.Mode = findModeIgnoreCase
+				e.Find.LastSearchTerm = ""
+				e.updatePromptLabel(e.getPromptFindLabel())
+				return
+			}
+			if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary2Chord.Suffix) {
+				e.Find.Mode = findModeRegex
+				e.Find.LastSearchTerm = ""
+				e.updatePromptLabel(e.getPromptFindLabel())
+				return
+			}
+		}
+	}
+
+	if keys.IsKeyAny(key, keyAsRune, k.Modifiers(), []config.Key{e.cfg.KeyBindings.FindSecondary1Chord.Prefix, e.cfg.KeyBindings.FindSecondary2Chord.Prefix}) {
+		e.awaitingChord = true
+		return
+	}
+
 	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
 		e.Exit = true
 		return
@@ -84,22 +112,12 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		if e.promptLabel != nil {
 			e.exitPrompt()
 		}
-	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) ||
-		(e.promptMode == promptModeFind && keys.IsKeyAny(key, keyAsRune, k.Modifiers(), []config.Key{e.cfg.KeyBindings.FindSecondary1, e.cfg.KeyBindings.FindSecondary2})) {
-		switchToSecondary1 := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary1)
-		switchToSecondary2 := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary2)
+	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) {
 		if e.promptMode == promptModeFind {
-			switchToDefault := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find)
-			if switchToDefault {
-				e.Find.Mode = findModeExact
-			} else if switchToSecondary1 {
-				e.Find.Mode = findModeIgnoreCase
-			} else if switchToSecondary2 {
-				e.Find.Mode = findModeRegex
-			}
+			e.Find.Mode = findModeExact
 			e.Find.LastSearchTerm = ""
 			e.updatePromptLabel(e.getPromptFindLabel())
-		} else if !switchToSecondary1 && !switchToSecondary2 {
+		} else {
 			e.promptMode = promptModeFind
 			e.prompt(e.getPromptFindLabel())
 		}
@@ -321,7 +339,9 @@ func (e *Editor) handleDelete() {
 }
 
 func (e *Editor) updatePromptLabel(label string) {
+	oldLen := len(e.promptLabel)
 	e.promptLabel = []rune(" " + label + " ")
+	e.cx += len(e.promptLabel) - oldLen
 }
 
 func (e *Editor) prompt(label string) {

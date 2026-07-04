@@ -2,8 +2,8 @@ package lexer
 
 import (
 	"encoding/hex"
-	"github.com/brice-v/et/consts"
 	"fmt"
+	"github.com/brice-v/et/consts"
 	"strings"
 	"unicode"
 	"unicode/utf8"

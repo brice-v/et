@@ -14,6 +14,11 @@ type Key struct {
 	Modifiers tcell.ModMask
 }
 
+type KeyChord struct {
+	Prefix Key `json:"prefix"`
+	Suffix Key `json:"suffix"`
+}
+
 type Color struct {
 	color.Color
 }
@@ -44,13 +49,13 @@ type Colors struct {
 }
 
 type KeyBindings struct {
-	Quit           Key `json:"quit"`
-	ExitPrompt     Key `json:"exit_prompt"`
-	Find           Key `json:"find"`
-	FindSecondary1 Key `json:"find_secondary1"`
-	FindSecondary2 Key `json:"find_secondary2"`
-	FindNext       Key `json:"find_next"`
-	FindPrevious   Key `json:"find_previous"`
+	Quit                Key      `json:"quit"`
+	ExitPrompt          Key      `json:"exit_prompt"`
+	Find                Key      `json:"find"`
+	FindNext            Key      `json:"find_next"`
+	FindPrevious        Key      `json:"find_previous"`
+	FindSecondary1Chord KeyChord `json:"find_secondary1_chord"`
+	FindSecondary2Chord KeyChord `json:"find_secondary2_chord"`
 }
 
 type Config struct {
@@ -76,13 +81,13 @@ func NewDefault() *Config {
 			Languages:             DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
-			Quit:           DefaultKeyBindingQuit(),
-			ExitPrompt:     DefaultKeyBindingExitPrompt(),
-			Find:           DefaultKeyBindingFind(),
-			FindSecondary1: DefaultKeyBindingFindSecondary1(),
-			FindSecondary2: DefaultKeyBindingFindSecondary2(),
-			FindNext:       DefaultKeyBindingFindNext(),
-			FindPrevious:   DefaultKeyBindingFindPrevious(),
+			Quit:                DefaultKeyBindingQuit(),
+			ExitPrompt:          DefaultKeyBindingExitPrompt(),
+			Find:                DefaultKeyBindingFind(),
+			FindNext:            DefaultKeyBindingFindNext(),
+			FindPrevious:        DefaultKeyBindingFindPrevious(),
+			FindSecondary1Chord: DefaultKeyBindingFindSecondary1Chord(),
+			FindSecondary2Chord: DefaultKeyBindingFindSecondary2Chord(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),

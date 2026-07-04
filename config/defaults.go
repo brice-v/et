@@ -49,12 +49,12 @@ func DefaultKeyBindingFind() Key {
 	return Key{Key: tcell.KeyF, Modifiers: tcell.ModCtrl}
 }
 
-func DefaultKeyBindingFindSecondary1() Key {
-	return Key{Key: tcell.KeyI, Modifiers: tcell.ModCtrl}
+func DefaultKeyBindingFindSecondary1Chord() KeyChord {
+	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('i'), Modifiers: tcell.ModNone}}
 }
 
-func DefaultKeyBindingFindSecondary2() Key {
-	return Key{Key: tcell.KeyG, Modifiers: tcell.ModCtrl}
+func DefaultKeyBindingFindSecondary2Chord() KeyChord {
+	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('g'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingFindNext() Key {

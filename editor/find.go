@@ -111,8 +111,8 @@ func (e *Editor) getPromptFindLabel() string {
 	return fmt.Sprintf("Search [%s] ([%s,%s,%s] modes, [%s,%s] matches):",
 		e.Find.Mode.String(),
 		e.cfg.KeyBindings.Find.String(),
-		e.cfg.KeyBindings.FindSecondary1.String(),
-		e.cfg.KeyBindings.FindSecondary2.String(),
+		e.cfg.KeyBindings.FindSecondary1Chord.String(),
+		e.cfg.KeyBindings.FindSecondary2Chord.String(),
 		e.cfg.KeyBindings.FindNext.String(),
 		e.cfg.KeyBindings.FindPrevious.String())
 }

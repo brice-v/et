@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/brice-v/et/config"
-	"github.com/brice-v/et/consts"
-	"github.com/brice-v/et/editor"
 	"flag"
 	"fmt"
 	"log"
 	"log/slog"
 	"os"
+
+	"github.com/brice-v/et/config"
+	"github.com/brice-v/et/consts"
+	"github.com/brice-v/et/editor"
 
 	"github.com/gdamore/tcell/v3"
 	_ "github.com/gdamore/tcell/v3/encoding"

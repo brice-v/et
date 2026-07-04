@@ -585,6 +585,78 @@ func TestKeyBindingsRoundTripWithModifier(t *testing.T) {
 	}
 }
 
+func TestKeyChordString(t *testing.T) {
+	tests := []struct {
+		name string
+		kc   KeyChord
+		want string
+	}{
+		{"ctrl+e i", KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('i'), Modifiers: tcell.ModNone}}, "ctrl+e i"},
+		{"ctrl+e g", KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('g'), Modifiers: tcell.ModNone}}, "ctrl+e g"},
+		{"no mods", KeyChord{Prefix: Key{Key: tcell.Key('x'), Modifiers: tcell.ModNone}, Suffix: Key{Key: tcell.Key('y'), Modifiers: tcell.ModNone}}, "x y"},
+		{"with modifiers", KeyChord{Prefix: Key{Key: tcell.Key('a'), Modifiers: tcell.ModCtrl | tcell.ModShift}, Suffix: Key{Key: tcell.Key('b'), Modifiers: tcell.ModAlt}}, "ctrl+shift+a alt+b"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.kc.String()
+			if got != tt.want {
+				t.Errorf("String() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefaultKeyChordValues(t *testing.T) {
+	kb := NewDefault().KeyBindings
+
+	wantPrefix := Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}
+	if kb.FindSecondary1Chord.Prefix != wantPrefix {
+		t.Errorf("FindSecondary1Chord.Prefix = %v, want %v", kb.FindSecondary1Chord.Prefix, wantPrefix)
+	}
+	if kb.FindSecondary1Chord.Suffix.Key != tcell.Key('i') || kb.FindSecondary1Chord.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("Default FindSecondary1Chord.Suffix = %v, want i", kb.FindSecondary1Chord.Suffix)
+	}
+	if kb.FindSecondary2Chord.Prefix != wantPrefix {
+		t.Errorf("FindSecondary2Chord.Prefix = %v, want %v", kb.FindSecondary2Chord.Prefix, wantPrefix)
+	}
+	if kb.FindSecondary2Chord.Suffix.Key != tcell.Key('g') || kb.FindSecondary2Chord.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("Default FindSecondary2Chord.Suffix = %v, want g", kb.FindSecondary2Chord.Suffix)
+	}
+}
+
+func TestKeyChordRoundTrip(t *testing.T) {
+	jsonStr := `{"prefix":"ctrl+e","suffix":"i"}`
+
+	var kc KeyChord
+	if err := json.Unmarshal([]byte(jsonStr), &kc); err != nil {
+		t.Fatal(err)
+	}
+
+	if kc.Prefix.Key != tcell.Key('e') || kc.Prefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("Prefix = %v, want ctrl+e", kc.Prefix)
+	}
+	if kc.Suffix.Key != tcell.Key('i') || kc.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("Suffix = %v, want i", kc.Suffix)
+	}
+
+	got, err := json.Marshal(kc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var kc2 KeyChord
+	if err := json.Unmarshal(got, &kc2); err != nil {
+		t.Fatal(err)
+	}
+	if kc2.Prefix != kc.Prefix {
+		t.Errorf("Prefix round-trip = %v, want %v", kc2.Prefix, kc.Prefix)
+	}
+	if kc2.Suffix != kc.Suffix {
+		t.Errorf("Suffix round-trip = %v, want %v", kc2.Suffix, kc.Suffix)
+	}
+}
+
 func TestCursorStyleFromString(t *testing.T) {
 	tests := []struct {
 		input string

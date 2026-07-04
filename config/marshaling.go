@@ -46,6 +46,10 @@ func (k *Key) String() string {
 	return strings.Join(parts, "+") + "+" + base
 }
 
+func (kc KeyChord) String() string {
+	return kc.Prefix.String() + " " + kc.Suffix.String()
+}
+
 func (k *Key) UnmarshalJSON(b []byte) error {
 	var s string
 	err := json.Unmarshal(b, &s)

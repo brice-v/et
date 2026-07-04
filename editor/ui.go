@@ -1,9 +1,10 @@
 package editor
 
 import (
+	"fmt"
+
 	"github.com/brice-v/et/consts"
 	"github.com/brice-v/et/lexer"
-	"fmt"
 )
 
 func (e *Editor) drawLine(lineNumberOnScreen int, line []rune) {
@@ -105,6 +106,9 @@ func (e *Editor) drawStatusBar() {
 		modStr = " [*]"
 	}
 	statusMsg := fmt.Sprintf(" et - %s%s | %s to quit", fnameStr, modStr, quitKeyBindsString)
+	if e.awaitingChord {
+		statusMsg += " [awaiting chord...]"
+	}
 	for i, ch := range statusMsg {
 		if i >= e.sw {
 			break
