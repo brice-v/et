@@ -259,7 +259,6 @@ func (e *Editor) ToggleTerminal() {
 	th := e.terminalHeight()
 	vt := e.term
 	e.updateTermSurface(th)
-	vt.Resize(e.sw, th)
 	vt.Attach(func(ev tcell.Event) {
 		select {
 		case e.s.EventQ() <- ev:

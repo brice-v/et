@@ -164,7 +164,11 @@ func keyCode(ev *tcell.EventKey) string {
 		case tcell.KeyF12:
 			key.WriteString(info.KeyF36)
 		default:
-			key.WriteString(ev.Str())
+			if ev.Key() >= tcell.KeyCtrlA && ev.Key() <= tcell.KeyCtrlZ {
+				key.WriteByte(byte(ev.Key() - tcell.KeyCtrlA + 1))
+			} else {
+				key.WriteString(ev.Str())
+			}
 		}
 	case tcell.ModCtrl | tcell.ModShift:
 		switch ev.Key() {

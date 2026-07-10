@@ -40,7 +40,7 @@ func main() {
 		*fileName = os.Args[1]
 	}
 
-	screen, err := tcell.NewScreen(tcell.OptAdvancedKeys(true))
+	screen, err := tcell.NewScreen()
 	if err != nil {
 		slog.Error("creating screen", "err", err)
 		os.Exit(1)
