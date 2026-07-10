@@ -23,20 +23,32 @@ func newPtyBackend(cmd *exec.Cmd, cols, rows uint16) (ptyBackend, error) {
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		stdin.Close()
+		if errr := stdin.Close(); errr != nil {
+			return nil, errr
+		}
 		return nil, err
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		stdin.Close()
-		stdout.Close()
+		if errr := stdin.Close(); errr != nil {
+			return nil, errr
+		}
+		if errr := stdout.Close(); errr != nil {
+			return nil, errr
+		}
 		return nil, err
 	}
 
 	if err := cmd.Start(); err != nil {
-		stdin.Close()
-		stdout.Close()
-		stderr.Close()
+		if errr := stdin.Close(); errr != nil {
+			return nil, errr
+		}
+		if errr := stdout.Close(); errr != nil {
+			return nil, errr
+		}
+		if errr := stderr.Close(); errr != nil {
+			return nil, errr
+		}
 		return nil, err
 	}
 
