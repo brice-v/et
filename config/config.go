@@ -57,6 +57,8 @@ type KeyBindings struct {
 	FindSecondary1Chord KeyChord `json:"find_secondary1_chord"`
 	FindSecondary2Chord KeyChord `json:"find_secondary2_chord"`
 	ToggleTerminal      Key      `json:"toggle_terminal"`
+	ToggleLineEnding    Key      `json:"toggle_line_ending"`
+	ToggleExpandTabs    Key      `json:"toggle_expand_tabs"`
 }
 
 type Config struct {
@@ -69,6 +71,8 @@ type Config struct {
 	DisableHighlighting bool              `json:"disable_highlighting"`
 	CursorStyle         string            `json:"cursor_style"`
 	CursorColor         Color             `json:"cursor_color"`
+	DefaultLineEnding   string            `json:"default_line_ending"`
+	ExpandTabs          bool              `json:"expand_tabs"`
 }
 
 func NewDefault() *Config {
@@ -90,6 +94,8 @@ func NewDefault() *Config {
 			FindSecondary1Chord: DefaultKeyBindingFindSecondary1Chord(),
 			FindSecondary2Chord: DefaultKeyBindingFindSecondary2Chord(),
 			ToggleTerminal:      DefaultKeyBindingToggleTerminal(),
+			ToggleLineEnding:    DefaultKeyBindingToggleLineEnding(),
+			ToggleExpandTabs:    DefaultKeyBindingToggleExpandTabs(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),
@@ -98,6 +104,8 @@ func NewDefault() *Config {
 		DisableHighlighting: DefaultDisableHighlighting(),
 		CursorStyle:         DefaultCursorStyle(),
 		CursorColor:         DefaultCursorColor(),
+		DefaultLineEnding:   DefaultLineEnding(),
+		ExpandTabs:          DefaultExpandTabs(),
 	}
 }
 

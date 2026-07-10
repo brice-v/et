@@ -7,25 +7,36 @@ import (
 )
 
 type Buffer struct {
-	lines [][]rune
-	dirty bool
+	lines      [][]rune
+	dirty      bool
+	lineEnding string
 }
 
 func NewBuffer(fileName string) *Buffer {
 	if fileName == "" {
-		return &Buffer{lines: [][]rune{{}}}
+		return &Buffer{lines: [][]rune{{}}, lineEnding: "lf"}
 	}
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		slog.Warn("could not read file", "err", err)
-		return &Buffer{}
+		return &Buffer{lineEnding: "lf"}
 	}
-	lines := strings.Split(string(data), "\n")
+	lineEnding := detectLineEnding(string(data))
+	content := strings.ReplaceAll(string(data), "\r\n", "\n")
+	content = strings.ReplaceAll(content, "\r", "\n")
+	lines := strings.Split(content, "\n")
 	fcl := make([][]rune, len(lines))
 	for i, line := range lines {
 		fcl[i] = []rune(line)
 	}
-	return &Buffer{lines: fcl}
+	return &Buffer{lines: fcl, lineEnding: lineEnding}
+}
+
+func detectLineEnding(content string) string {
+	if strings.Contains(content, "\r\n") {
+		return "crlf"
+	}
+	return "lf"
 }
 
 func (b *Buffer) NumLines() int {
@@ -42,6 +53,39 @@ func (b *Buffer) IsOpen() bool {
 
 func (b *Buffer) IsDirty() bool {
 	return b.dirty
+}
+
+func (b *Buffer) LineEnding() string {
+	return b.lineEnding
+}
+
+func (b *Buffer) SetLineEnding(le string) {
+	b.lineEnding = le
+	b.dirty = true
+}
+
+func (b *Buffer) ToggleLineEnding() {
+	if b.lineEnding == "lf" {
+		b.lineEnding = "crlf"
+	} else {
+		b.lineEnding = "lf"
+	}
+	b.dirty = true
+}
+
+func (b *Buffer) Bytes() []byte {
+	var sb strings.Builder
+	sep := "\n"
+	if b.lineEnding == "crlf" {
+		sep = "\r\n"
+	}
+	for i, line := range b.lines {
+		if i > 0 {
+			sb.WriteString(sep)
+		}
+		sb.WriteString(string(line))
+	}
+	return []byte(sb.String())
 }
 
 func (b *Buffer) InsertRune(lineNum int, col int, r rune) {

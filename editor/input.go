@@ -2,6 +2,7 @@ package editor
 
 import (
 	"log/slog"
+	"strings"
 
 	"github.com/brice-v/et/config"
 	"github.com/brice-v/et/consts"
@@ -77,7 +78,11 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		e.handleDelete()
 	case tcell.KeyTab, tcell.KeyBacktab:
 		if e.promptMode == promptModeNormal {
-			e.handleInsertRune("\t")
+			if e.expandTabs {
+				e.handleInsertRune(strings.Repeat(" ", e.cfg.TabWidth))
+			} else {
+				e.handleInsertRune("\t")
+			}
 		}
 	}
 	e.updateViewport()
@@ -114,6 +119,14 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 
 	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
 		e.Exit = true
+		return
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleLineEnding) {
+		e.buffer.ToggleLineEnding()
+		return
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleExpandTabs) {
+		e.ToggleExpandTabs()
 		return
 	}
 	if key == tcell.KeyRune {

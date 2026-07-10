@@ -812,6 +812,94 @@ func TestCursorConfigDefaultsWhenMissing(t *testing.T) {
 	}
 }
 
+func TestDefaultLineEnding(t *testing.T) {
+	cfg := NewDefault()
+	if cfg.DefaultLineEnding != "lf" {
+		t.Errorf("DefaultLineEnding = %q, want %q", cfg.DefaultLineEnding, "lf")
+	}
+}
+
+func TestDefaultExpandTabs(t *testing.T) {
+	cfg := NewDefault()
+	if cfg.ExpandTabs != false {
+		t.Errorf("ExpandTabs = %t, want false", cfg.ExpandTabs)
+	}
+}
+
+func TestDefaultToggleLineEndingKey(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	wantKey := tcell.Key('l')
+	wantMod := tcell.ModCtrl
+	if kb.ToggleLineEnding.Key != wantKey {
+		t.Errorf("ToggleLineEnding.Key = %v, want %v", kb.ToggleLineEnding.Key, wantKey)
+	}
+	if kb.ToggleLineEnding.Modifiers != wantMod {
+		t.Errorf("ToggleLineEnding.Modifiers = %v, want %v", kb.ToggleLineEnding.Modifiers, wantMod)
+	}
+}
+
+func TestDefaultToggleExpandTabsKey(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	wantKey := tcell.Key('t')
+	wantMod := tcell.ModCtrl
+	if kb.ToggleExpandTabs.Key != wantKey {
+		t.Errorf("ToggleExpandTabs.Key = %v, want %v", kb.ToggleExpandTabs.Key, wantKey)
+	}
+	if kb.ToggleExpandTabs.Modifiers != wantMod {
+		t.Errorf("ToggleExpandTabs.Modifiers = %v, want %v", kb.ToggleExpandTabs.Modifiers, wantMod)
+	}
+}
+
+func TestLineEndingRoundTrip(t *testing.T) {
+	jsonStr := `{"default_line_ending": "crlf"}`
+	var cfg Config
+	if err := json.Unmarshal([]byte(jsonStr), &cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.DefaultLineEnding != "crlf" {
+		t.Errorf("DefaultLineEnding = %q, want %q", cfg.DefaultLineEnding, "crlf")
+	}
+}
+
+func TestExpandTabsParse(t *testing.T) {
+	jsonStr := `{"expand_tabs": true}`
+	var cfg Config
+	if err := json.Unmarshal([]byte(jsonStr), &cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ExpandTabs != true {
+		t.Errorf("ExpandTabs = %t, want true", cfg.ExpandTabs)
+	}
+}
+
+func TestToggleLineEndingKeyParse(t *testing.T) {
+	jsonStr := `{"toggle_line_ending": "ctrl+shift+l"}`
+	var kb KeyBindings
+	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
+		t.Fatal(err)
+	}
+	if kb.ToggleLineEnding.Key != tcell.Key('l') {
+		t.Errorf("Key = %v, want 'l'", kb.ToggleLineEnding.Key)
+	}
+	if kb.ToggleLineEnding.Modifiers != tcell.ModCtrl|tcell.ModShift {
+		t.Errorf("Modifiers = %v, want ModCtrl|ModShift", kb.ToggleLineEnding.Modifiers)
+	}
+}
+
+func TestToggleExpandTabsKeyParse(t *testing.T) {
+	jsonStr := `{"toggle_expand_tabs": "ctrl+t"}`
+	var kb KeyBindings
+	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
+		t.Fatal(err)
+	}
+	if kb.ToggleExpandTabs.Key != tcell.Key('t') {
+		t.Errorf("Key = %v, want 't'", kb.ToggleExpandTabs.Key)
+	}
+	if kb.ToggleExpandTabs.Modifiers != tcell.ModCtrl {
+		t.Errorf("Modifiers = %v, want ModCtrl", kb.ToggleExpandTabs.Modifiers)
+	}
+}
+
 func TestCursorConfigRoundTrip(t *testing.T) {
 	path := "test_cursor_roundtrip.json"
 

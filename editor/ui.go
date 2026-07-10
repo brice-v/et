@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/brice-v/et/consts"
 	"github.com/brice-v/et/lexer"
@@ -126,9 +127,14 @@ func (e *Editor) drawStatusBar() {
 			ft = "[unknown]"
 		}
 	}
+	leStr := strings.ToUpper(e.buffer.LineEnding())
+	tsStr := "Tabs"
+	if e.expandTabs {
+		tsStr = "Spaces"
+	}
 	cursorLine := e.vScrollOffset + e.cy + 1
 	cursorCol := e.stickyCol + 1
-	posStr := fmt.Sprintf("%s Ln %d, Col %d", ft, cursorLine, cursorCol)
+	posStr := fmt.Sprintf("%s [%s %s] Ln %d, Col %d", ft, leStr, tsStr, cursorLine, cursorCol)
 	posX := max(e.sw-len(posStr), 0)
 	for i, ch := range posStr {
 		x := posX + i

@@ -108,3 +108,19 @@ func DefaultCursorColor() Color {
 func DefaultKeyBindingToggleTerminal() Key {
 	return Key{Key: tcell.Key(';'), Modifiers: tcell.ModCtrl}
 }
+
+func DefaultKeyBindingToggleLineEnding() Key {
+	return Key{Key: tcell.Key('l'), Modifiers: tcell.ModCtrl}
+}
+
+func DefaultKeyBindingToggleExpandTabs() Key {
+	return Key{Key: tcell.Key('t'), Modifiers: tcell.ModCtrl}
+}
+
+func DefaultLineEnding() string {
+	return "lf"
+}
+
+func DefaultExpandTabs() bool {
+	return false
+}

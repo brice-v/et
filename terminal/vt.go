@@ -2,15 +2,14 @@ package terminal
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/exec"
 	"runtime/debug"
 	"strings"
 	"sync"
-	"syscall"
 
-	"github.com/creack/pty"
 	"github.com/gdamore/tcell/v3"
 	"github.com/mattn/go-runewidth"
 )
@@ -19,6 +18,15 @@ type (
 	column int
 	row    int
 )
+
+// ptyBackend abstracts the PTY or alternative backend for the VT terminal.
+type ptyBackend interface {
+	io.Reader
+	io.Writer
+	io.Closer
+	io.StringWriter
+	Resize(cols, rows uint16) error
+}
 
 // VT models a virtual terminal
 type VT struct {
@@ -46,11 +54,10 @@ type VT struct {
 	primaryState cursorState
 	altState     cursorState
 
-	cmd          *exec.Cmd
 	dirty        bool
 	eventHandler func(tcell.Event)
 	parser       *Parser
-	pty          *os.File
+	pty          ptyBackend
 	surface      Surface
 	events       chan tcell.Event
 
@@ -123,7 +130,6 @@ func (vt *VT) Start(cmd *exec.Cmd) error {
 	if cmd == nil {
 		return fmt.Errorf("no command to run")
 	}
-	vt.cmd = cmd
 	vt.mu.Lock()
 	w, h := vt.surface.Size()
 	vt.mu.Unlock()
@@ -138,20 +144,8 @@ func (vt *VT) Start(cmd *exec.Cmd) error {
 	}
 	cmd.Env = append(env, "TERM="+vt.TERM)
 
-	// Start the command with a pty.
 	var err error
-	winsize := pty.Winsize{
-		Cols: uint16(w),
-		Rows: uint16(h),
-	}
-	vt.pty, err = pty.StartWithAttrs(
-		cmd,
-		&winsize,
-		&syscall.SysProcAttr{
-			Setsid:  true,
-			Setctty: true,
-			Ctty:    1,
-		})
+	vt.pty, err = newPtyBackend(cmd, uint16(w), uint16(h))
 	if err != nil {
 		return err
 	}
@@ -201,7 +195,6 @@ func (vt *VT) update(seq Sequence) {
 	case DCSData:
 	case DCSEndOfData:
 	}
-	// TODO optimize when we post EventRedraw
 	if !vt.dirty {
 		vt.dirty = true
 		vt.postEvent(&EventRedraw{
@@ -293,11 +286,10 @@ func (vt *VT) Resize(w int, h int) {
 		vt.activeScreen = vt.altScreen
 	}
 
-	if err := pty.Setsize(vt.pty, &pty.Winsize{
-		Cols: uint16(w),
-		Rows: uint16(h),
-	}); err != nil {
-		slog.Warn("error setting pty size", "err", err)
+	if vt.pty != nil {
+		if err := vt.pty.Resize(uint16(w), uint16(h)); err != nil {
+			slog.Warn("error setting terminal backend size", "err", err)
+		}
 	}
 }
 
@@ -421,16 +413,10 @@ func (vt *VT) scrollDown(n int) {
 func (vt *VT) Close() {
 	vt.mu.Lock()
 	defer vt.mu.Unlock()
-	if vt.cmd != nil && vt.cmd.Process != nil {
-		if err := vt.cmd.Process.Kill(); err != nil {
-			slog.Warn("error killing command", "err", err)
+	if vt.pty != nil {
+		if err := vt.pty.Close(); err != nil {
+			slog.Warn("error closing terminal backend", "err", err)
 		}
-		if err := vt.cmd.Wait(); err != nil {
-			slog.Warn("error waiting for command", "err", err)
-		}
-	}
-	if err := vt.pty.Close(); err != nil {
-		slog.Warn("error closing pty", "err", err)
 	}
 }
 
@@ -474,14 +460,6 @@ func (vt *VT) Draw() {
 			col += w
 		}
 	}
-	// for _, s := range buf.getVisibleSixels() {
-	// 	fmt.Printf("\033[%d;%dH", s.Sixel.Y, s.Sixel.X)
-	// 	// DECSIXEL Introducer(\033P0;0;8q) + DECGRA ("1;1): Set Raster Attributes
-	// 	os.Stdout.Write([]byte{0x1b, 0x50, 0x30, 0x3b, 0x30, 0x3b, 0x38, 0x71, 0x22, 0x31, 0x3b, 0x31})
-	// 	os.Stdout.Write(s.Sixel.Data)
-	// 	// string terminator(ST)
-	// 	os.Stdout.Write([]byte{0x1b, 0x5c})
-	// }
 }
 
 func (vt *VT) HandleEvent(e tcell.Event) bool {
@@ -489,8 +467,8 @@ func (vt *VT) HandleEvent(e tcell.Event) bool {
 	defer vt.mu.Unlock()
 	switch e := e.(type) {
 	case *tcell.EventKey:
-		if _, err := vt.pty.WriteString(keyCode(e)); err != nil {
-			slog.Warn("error writing key event to pty", "err", err)
+		if _, err := vt.pty.Write([]byte(keyCode(e))); err != nil {
+			slog.Warn("error writing key event to backend", "err", err)
 		}
 		return true
 	case *tcell.EventPaste:
@@ -498,20 +476,20 @@ func (vt *VT) HandleEvent(e tcell.Event) bool {
 		case vt.mode&paste == 0:
 			return false
 		case e.Start():
-			if _, err := vt.pty.WriteString(info.PasteStart); err != nil {
-				slog.Warn("error writing paste start to pty", "err", err)
+			if _, err := vt.pty.Write([]byte(info.PasteStart)); err != nil {
+				slog.Warn("error writing paste start to backend", "err", err)
 			}
 			return true
 		case e.End():
-			if _, err := vt.pty.WriteString(info.PasteEnd); err != nil {
-				slog.Warn("error writing paste end to pty", "err", err)
+			if _, err := vt.pty.Write([]byte(info.PasteEnd)); err != nil {
+				slog.Warn("error writing paste end to backend", "err", err)
 			}
 			return true
 		}
 	case *tcell.EventMouse:
 		str := vt.handleMouse(e)
-		if _, err := vt.pty.WriteString(str); err != nil {
-			slog.Warn("error writing mouse event to pty", "err", err)
+		if _, err := vt.pty.Write([]byte(str)); err != nil {
+			slog.Warn("error writing mouse event to backend", "err", err)
 		}
 	}
 	return false

@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/brice-v/et/config"
@@ -61,6 +63,7 @@ type Editor struct {
 	cfg *config.Config
 
 	fileName      string
+	absPath       string
 	buffer        *Buffer
 	fileExtension string
 
@@ -75,6 +78,9 @@ type Editor struct {
 
 	// awaitingChord is true after the chord prefix key has been pressed
 	awaitingChord bool
+
+	// expandTabs controls whether tabs are converted to spaces on insert
+	expandTabs bool
 
 	// Terminal integration
 	term        *terminal.VT
@@ -91,16 +97,33 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 		fileExtension = splitFilename[len(splitFilename)-1]
 	}
 	s.SetCursorStyle(config.CursorStyleFromString(cfg.CursorStyle), cfg.CursorColor.Color)
+
+	absPath := ""
+	if fileName != "" {
+		abs, err := filepath.Abs(fileName)
+		if err == nil {
+			absPath = abs
+		}
+	} else {
+		cwd, err := os.Getwd()
+		if err == nil {
+			absPath = cwd
+		}
+	}
+	slog.Info("editor opened", "path", absPath)
+
 	return &Editor{
 		s:             s,
 		sbh:           1,
 		baseStyle:     baseStyle,
 		cfg:           cfg,
 		fileName:      fileName,
+		absPath:       absPath,
 		buffer:        NewBuffer(fileName),
 		fileExtension: fileExtension,
 		hl:            NewHighlightState(cfg, fileExtension),
 		promptMode:    promptModeNormal,
+		expandTabs:    cfg.ExpandTabs,
 	}
 }
 
@@ -194,6 +217,27 @@ func (ts *termSurface) Size() (int, int) {
 	return ts.width, ts.height
 }
 
+// shellCommand returns the default shell command for the current platform.
+func shellCommand() string {
+	if runtime.GOOS == "windows" {
+		shell := os.Getenv("COMSPEC")
+		if shell == "" {
+			return "cmd.exe"
+		}
+		return shell
+	}
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		return "bash"
+	}
+	return shell
+}
+
+// ToggleExpandTabs switches between tab and space insertion.
+func (e *Editor) ToggleExpandTabs() {
+	e.expandTabs = !e.expandTabs
+}
+
 // terminalHeight returns the height of the terminal panel (minimum 3 rows)
 func (e *Editor) terminalHeight() int {
 	if !e.termOpen {
@@ -224,10 +268,7 @@ func (e *Editor) ToggleTerminal() {
 	})
 	if !e.termStarted {
 		e.termStarted = true
-		e.termShell = os.Getenv("SHELL")
-		if e.termShell == "" {
-			e.termShell = "bash"
-		}
+		e.termShell = shellCommand()
 		cmd := exec.Command(e.termShell)
 		go func() {
 			if err := vt.Start(cmd); err != nil {
