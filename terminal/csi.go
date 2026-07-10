@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/gdamore/tcell/v3"
@@ -78,7 +79,9 @@ func (vt *VT) csi(csi string, params []int) {
 		resp.WriteString("22")
 		// Response terminator
 		resp.WriteString("c")
-		vt.pty.WriteString(resp.String())
+		if _, err := vt.pty.WriteString(resp.String()); err != nil {
+			slog.Warn("error writing device attributes response", "err", err)
+		}
 	case "d":
 		vt.vpa(ps(params))
 	case "e":
@@ -103,13 +106,17 @@ func (vt *VT) csi(csi string, params []int) {
 		switch ps(params) {
 		case 5:
 			// "Ok"
-			vt.pty.WriteString("\x1B[0n")
+			if _, err := vt.pty.WriteString("\x1B[0n"); err != nil {
+				slog.Warn("error writing device status report", "err", err)
+			}
 		case 6:
 			// report cursor position
 			// This sequence can be identical to a function key?
 			// CSI r ; c R
 			resp := fmt.Sprintf("\x1B[%d;%dR", vt.cursor.row+1, vt.cursor.col+1)
-			vt.pty.WriteString(resp)
+			if _, err := vt.pty.WriteString(resp); err != nil {
+				slog.Warn("error writing cursor position report", "err", err)
+			}
 		}
 	case "r":
 		vt.decstbm(params)
@@ -151,7 +158,7 @@ func (vt *VT) ich(ps int) {
 		}
 		line[i] = line[i-column(ps)]
 	}
-	for i := 0; i < ps; i += 1 {
+	for i := 0; i < ps; i++ {
 		if int(col)+i >= (vt.width() - 1) {
 			break
 		}
@@ -225,7 +232,7 @@ func (vt *VT) cnl(ps int) {
 	if ps == 0 {
 		ps = 1
 	}
-	for i := 0; i < ps; i += 1 {
+	for range ps {
 		vt.nel()
 	}
 }
@@ -237,7 +244,7 @@ func (vt *VT) cpl(ps int) {
 	if ps == 0 {
 		ps = 1
 	}
-	for i := 0; i < ps; i += 1 {
+	for range ps {
 		vt.ri()
 	}
 	vt.cursor.col = vt.margin.left
@@ -251,13 +258,7 @@ func (vt *VT) cha(ps int) {
 	if ps == 0 {
 		ps = 1
 	}
-	vt.cursor.col = column(ps - 1)
-	if vt.cursor.col > vt.margin.right {
-		vt.cursor.col = vt.margin.right
-	}
-	if vt.cursor.col < vt.margin.left {
-		vt.cursor.col = vt.margin.left
-	}
+	vt.cursor.col = max(min(column(ps-1), vt.margin.right), vt.margin.left)
 }
 
 // Cursor Position (CUP) CSI Ps;Ps H
@@ -299,7 +300,7 @@ func (vt *VT) cht(ps int) {
 			continue
 		}
 		vt.cursor.col = ts
-		n += 1
+		n++
 	}
 }
 
@@ -312,8 +313,8 @@ func (vt *VT) ed(ps int) {
 	// completely erased lines.
 	case 0:
 		vt.lastCol = false
-		for r := vt.cursor.row; r < row(vt.height()); r += 1 {
-			for col := column(0); col < column(vt.width()); col += 1 {
+		for r := vt.cursor.row; r < row(vt.height()); r++ {
+			for col := column(0); col < column(vt.width()); col++ {
 				if r == vt.cursor.row && col < vt.cursor.col {
 					// Don't erase current row before cursor
 					continue
@@ -327,8 +328,8 @@ func (vt *VT) ed(ps int) {
 	// for all completely erased lines.
 	case 1:
 		vt.lastCol = false
-		for r := row(0); r <= vt.cursor.row; r += 1 {
-			for col := column(0); col < column(vt.width()); col += 1 {
+		for r := row(0); r <= vt.cursor.row; r++ {
+			for col := column(0); col < column(vt.width()); col++ {
 				if r == vt.cursor.row && col > vt.cursor.col {
 					// Don't erase current row after current
 					// column
@@ -342,8 +343,8 @@ func (vt *VT) ed(ps int) {
 	// single-width. The cursor does not move.
 	case 2:
 		vt.lastCol = false
-		for r := row(0); r < row(vt.height()); r += 1 {
-			for col := column(0); col < column(vt.width()); col += 1 {
+		for r := row(0); r < row(vt.height()); r++ {
+			for col := column(0); col < column(vt.width()); col++ {
 				vt.activeScreen[r][col].erase(vt.cursor.attrs)
 			}
 		}
@@ -358,20 +359,20 @@ func (vt *VT) el(ps int) {
 	// Erases from the cursor to the end of the line, including the cursor
 	// position. Line attribute is not affected.
 	case 0:
-		for col := vt.cursor.col; col < column(vt.width()); col += 1 {
+		for col := vt.cursor.col; col < column(vt.width()); col++ {
 			vt.activeScreen[r][col].erase(vt.cursor.attrs)
 		}
 
 	// Erases from the beginning of the line to the cursor, including the
 	// cursor position. Line attribute is not affected.
 	case 1:
-		for col := column(0); col <= vt.cursor.col; col += 1 {
+		for col := column(0); col <= vt.cursor.col; col++ {
 			vt.activeScreen[r][col].erase(vt.cursor.attrs)
 		}
 
 	// Erases the complete line.
 	case 2:
-		for col := column(0); col < column(vt.width()); col += 1 {
+		for col := column(0); col < column(vt.width()); col++ {
 			vt.activeScreen[r][col].erase(vt.cursor.attrs)
 		}
 	}
@@ -414,8 +415,8 @@ func (vt *VT) il(ps int) {
 	}
 
 	// insert the blank lines (we do this by erasing the cells)
-	for r := row(0); r < row(ps); r += 1 {
-		for col := vt.margin.left; col <= vt.margin.right; col += 1 {
+	for r := row(0); r < row(ps); r++ {
+		for col := vt.margin.left; col <= vt.margin.right; col++ {
 			vt.activeScreen[vt.cursor.row+r][col].erase(vt.cursor.attrs)
 		}
 	}
@@ -453,12 +454,12 @@ func (vt *VT) dl(ps int) {
 		ps = int(vt.margin.bottom - vt.cursor.row)
 	}
 
-	for r := vt.cursor.row; r <= vt.margin.bottom; r += 1 {
+	for r := vt.cursor.row; r <= vt.margin.bottom; r++ {
 		if r <= vt.margin.bottom-row(ps) {
 			copy(vt.activeScreen[r], vt.activeScreen[r+row(ps)])
 			continue
 		}
-		for col := vt.margin.left; col <= vt.margin.right; col += 1 {
+		for col := vt.margin.left; col <= vt.margin.right; col++ {
 			vt.activeScreen[r][col].erase(vt.cursor.attrs)
 		}
 	}
@@ -478,7 +479,7 @@ func (vt *VT) dch(ps int) {
 		ps = 1
 	}
 	row := vt.cursor.row
-	for col := vt.cursor.col; col <= vt.margin.right; col += 1 {
+	for col := vt.cursor.col; col <= vt.margin.right; col++ {
 		if col+column(ps) > vt.margin.right {
 			vt.activeScreen[row][col].erase(vt.cursor.attrs)
 			continue
@@ -499,7 +500,7 @@ func (vt *VT) ech(ps int) {
 		ps = 1
 	}
 
-	for i := column(0); i < column(ps); i += 1 {
+	for i := column(0); i < column(ps); i++ {
 		if vt.cursor.col+i == column(vt.width())-1 {
 			return
 		}
@@ -524,7 +525,7 @@ func (vt *VT) cbt(ps int) {
 			break
 		}
 		vt.cursor.col = vt.tabStop[i]
-		n += 1
+		n++
 	}
 }
 
@@ -611,8 +612,8 @@ func (vt *VT) rep(ps int) {
 		return
 	}
 	ch := vt.activeScreen[vt.cursor.row][col-1]
-	for i := 0; i < ps; i += 1 {
-		if col + column(i) == vt.margin.right {
+	for i := range ps {
+		if col+column(i) == vt.margin.right {
 			return
 		}
 		vt.activeScreen[vt.cursor.row][vt.cursor.col+column(i)].content = ch.content

@@ -2,8 +2,7 @@ package terminal
 
 import (
 	"fmt"
-	"io"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"runtime/debug"
@@ -23,7 +22,6 @@ type (
 
 // VT models a virtual terminal
 type VT struct {
-	Logger *log.Logger
 	// If true, OSC8 enables the output of OSC8 strings. Otherwise, any OSC8
 	// sequences will be stripped
 	OSC8 bool
@@ -41,7 +39,6 @@ type VT struct {
 	cursor   cursor
 	margin   margin
 	mode     mode
-	sShift   charset
 	tabStop  []column
 	// lastCol is a flag indicating we printed in the last col
 	lastCol bool
@@ -80,8 +77,7 @@ func New() *VT {
 		tabs = append(tabs, column(i))
 	}
 	return &VT{
-		Logger: log.New(io.Discard, "", log.Flags()),
-		OSC8:   true,
+		OSC8: true,
 		charsets: charsets{
 			designations: map[charsetDesignator]charset{
 				g0: ascii,
@@ -114,7 +110,7 @@ func New() *VT {
 			decawm: true,
 		},
 		tabStop:      tabs,
-		eventHandler: func(ev tcell.Event) { return },
+		eventHandler: func(ev tcell.Event) {},
 		// Buffering to 2 events. If there is ever a case where one
 		// sequence can trigger two events, this should be increased
 		events: make(chan tcell.Event, 2),
@@ -238,9 +234,9 @@ func (vt *VT) recover() {
 		return
 	}
 	ret := strings.Builder{}
-	ret.WriteString(fmt.Sprintf("cursor row=%d col=%d\n", vt.cursor.row, vt.cursor.col))
-	ret.WriteString(fmt.Sprintf("margin left=%d right=%d\n", vt.margin.left, vt.margin.right))
-	ret.WriteString(fmt.Sprintf("%s\n", err))
+	fmt.Fprintf(&ret, "cursor row=%d col=%d\n", vt.cursor.row, vt.cursor.col)
+	fmt.Fprintf(&ret, "margin left=%d right=%d\n", vt.margin.left, vt.margin.right)
+	fmt.Fprintf(&ret, "%s\n", err)
 	ret.Write(debug.Stack())
 
 	vt.postEvent(&EventPanic{
@@ -297,10 +293,12 @@ func (vt *VT) Resize(w int, h int) {
 		vt.activeScreen = vt.altScreen
 	}
 
-	_ = pty.Setsize(vt.pty, &pty.Winsize{
+	if err := pty.Setsize(vt.pty, &pty.Winsize{
 		Cols: uint16(w),
 		Rows: uint16(h),
-	})
+	}); err != nil {
+		slog.Warn("error setting pty size", "err", err)
+	}
 }
 
 func (vt *VT) width() int {
@@ -369,7 +367,7 @@ func (vt *VT) print(r rune) {
 	vt.activeScreen[rw][col] = cell
 
 	// Set trailing cells to a space if wide rune
-	for i := column(1); i < column(w); i += 1 {
+	for i := column(1); i < column(w); i++ {
 		if col+i > vt.margin.right {
 			break
 		}
@@ -424,10 +422,16 @@ func (vt *VT) Close() {
 	vt.mu.Lock()
 	defer vt.mu.Unlock()
 	if vt.cmd != nil && vt.cmd.Process != nil {
-		vt.cmd.Process.Kill()
-		vt.cmd.Wait()
+		if err := vt.cmd.Process.Kill(); err != nil {
+			slog.Warn("error killing command", "err", err)
+		}
+		if err := vt.cmd.Wait(); err != nil {
+			slog.Warn("error waiting for command", "err", err)
+		}
 	}
-	vt.pty.Close()
+	if err := vt.pty.Close(); err != nil {
+		slog.Warn("error closing pty", "err", err)
+	}
 }
 
 func (vt *VT) Attach(fn func(ev tcell.Event)) {
@@ -439,9 +443,7 @@ func (vt *VT) Attach(fn func(ev tcell.Event)) {
 func (vt *VT) Detach() {
 	vt.mu.Lock()
 	defer vt.mu.Unlock()
-	vt.eventHandler = func(ev tcell.Event) {
-		return
-	}
+	vt.eventHandler = func(ev tcell.Event) {}
 }
 
 func (vt *VT) postEvent(ev tcell.Event) {
@@ -487,22 +489,30 @@ func (vt *VT) HandleEvent(e tcell.Event) bool {
 	defer vt.mu.Unlock()
 	switch e := e.(type) {
 	case *tcell.EventKey:
-		vt.pty.WriteString(keyCode(e))
+		if _, err := vt.pty.WriteString(keyCode(e)); err != nil {
+			slog.Warn("error writing key event to pty", "err", err)
+		}
 		return true
 	case *tcell.EventPaste:
 		switch {
 		case vt.mode&paste == 0:
 			return false
 		case e.Start():
-			vt.pty.WriteString(info.PasteStart)
+			if _, err := vt.pty.WriteString(info.PasteStart); err != nil {
+				slog.Warn("error writing paste start to pty", "err", err)
+			}
 			return true
 		case e.End():
-			vt.pty.WriteString(info.PasteEnd)
+			if _, err := vt.pty.WriteString(info.PasteEnd); err != nil {
+				slog.Warn("error writing paste end to pty", "err", err)
+			}
 			return true
 		}
 	case *tcell.EventMouse:
 		str := vt.handleMouse(e)
-		vt.pty.WriteString(str)
+		if _, err := vt.pty.WriteString(str); err != nil {
+			slog.Warn("error writing mouse event to pty", "err", err)
+		}
 	}
 	return false
 }

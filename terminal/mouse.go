@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -12,14 +13,26 @@ func (vt *VT) handleMouse(ev *tcell.EventMouse) string {
 			// Translate wheel motion into arrows up and down
 			// 3x rows
 			if ev.Buttons()&tcell.WheelUp != 0 {
-				vt.pty.WriteString(info.KeyUp)
-				vt.pty.WriteString(info.KeyUp)
-				vt.pty.WriteString(info.KeyUp)
+				if _, err := vt.pty.WriteString(info.KeyUp); err != nil {
+					slog.Warn("error writing wheel up to pty", "err", err)
+				}
+				if _, err := vt.pty.WriteString(info.KeyUp); err != nil {
+					slog.Warn("error writing wheel up to pty", "err", err)
+				}
+				if _, err := vt.pty.WriteString(info.KeyUp); err != nil {
+					slog.Warn("error writing wheel up to pty", "err", err)
+				}
 			}
 			if ev.Buttons()&tcell.WheelDown != 0 {
-				vt.pty.WriteString(info.KeyDown)
-				vt.pty.WriteString(info.KeyDown)
-				vt.pty.WriteString(info.KeyDown)
+				if _, err := vt.pty.WriteString(info.KeyDown); err != nil {
+					slog.Warn("error writing wheel down to pty", "err", err)
+				}
+				if _, err := vt.pty.WriteString(info.KeyDown); err != nil {
+					slog.Warn("error writing wheel down to pty", "err", err)
+				}
+				if _, err := vt.pty.WriteString(info.KeyDown); err != nil {
+					slog.Warn("error writing wheel down to pty", "err", err)
+				}
 			}
 		}
 		return ""

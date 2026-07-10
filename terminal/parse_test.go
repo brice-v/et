@@ -38,7 +38,7 @@ func TestUTF8(t *testing.T) {
 				if i < len(test.expected) {
 					assert.Equal(t, test.expected[i], seq)
 				}
-				i += 1
+				i++
 			}
 		})
 	}
@@ -472,7 +472,7 @@ func TestCSI(t *testing.T) {
 				if i < len(test.expected) {
 					assert.Equal(t, test.expected[i], seq)
 				}
-				i += 1
+				i++
 			}
 		})
 	}
@@ -544,7 +544,7 @@ func TestDCS(t *testing.T) {
 				if i < len(test.expected) {
 					assert.Equal(t, test.expected[i], seq)
 				}
-				i += 1
+				i++
 			}
 		})
 	}
@@ -619,7 +619,7 @@ func TestEscape(t *testing.T) {
 					break
 				}
 				assert.Equal(t, test.expected[i], seq)
-				i += 1
+				i++
 				assert.LessOrEqual(t, i, len(test.expected), "more sequences than expected")
 			}
 		})
@@ -709,7 +709,7 @@ func TestEscapeIntermediate(t *testing.T) {
 				if i < len(test.expected) {
 					assert.Equal(t, test.expected[i], seq)
 				}
-				i += 1
+				i++
 			}
 		})
 	}
@@ -752,7 +752,7 @@ func TestGround(t *testing.T) {
 					break
 				}
 				assert.Equal(t, test.expected[i], seq)
-				i += 1
+				i++
 			}
 		})
 	}
@@ -878,7 +878,7 @@ func TestOSC(t *testing.T) {
 				if i < len(test.expected) {
 					assert.Equal(t, test.expected[i], seq)
 				}
-				i += 1
+				i++
 			}
 		})
 	}

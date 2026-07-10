@@ -6,7 +6,7 @@ func (vt *VT) sgr(params []int) {
 	if len(params) == 0 {
 		params = []int{0}
 	}
-	for i := 0; i < len(params); i += 1 {
+	for i := 0; i < len(params); i++ {
 		switch params[i] {
 		case 0:
 			vt.cursor.attrs = tcell.StyleDefault

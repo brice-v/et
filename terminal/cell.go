@@ -22,8 +22,3 @@ func (c *cell) erase(s tcell.Style) {
 	c.content = 0
 	c.attrs = tcell.StyleDefault.Background(bg)
 }
-
-// selectiveErase removes the cell content, but keeps the attributes
-func (c *cell) selectiveErase() {
-	c.content = 0
-}

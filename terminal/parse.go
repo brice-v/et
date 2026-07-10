@@ -150,7 +150,6 @@ func (p *Parser) escapeDispatch(r rune) {
 		Final:        r,
 		Intermediate: p.intermediate,
 	})
-	return
 }
 
 // This action collects the characters of a parameter string for a control

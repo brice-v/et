@@ -30,14 +30,8 @@ const (
 	decawm
 	// Autorepeat mode
 	decarm
-	// Printer form feed mode
-	decpff
-	// Printer extent mode
-	decpex
 	// Text Cursor Enable mode
 	dectcem
-	// National replacement character sets
-	decnrcm
 
 	// xterm
 	//

@@ -180,10 +180,10 @@ func (e *Editor) bufY(vy int) int {
 
 // termSurface wraps a tcell.Screen to offset drawing to a specific region
 type termSurface struct {
-	screen   tcell.Screen
-	offY     int
-	width    int
-	height   int
+	screen tcell.Screen
+	offY   int
+	width  int
+	height int
 }
 
 func (ts *termSurface) SetContent(x, y int, ch rune, comb []rune, style tcell.Style) {
@@ -199,11 +199,7 @@ func (e *Editor) terminalHeight() int {
 	if !e.termOpen {
 		return 0
 	}
-	h := e.sh / 4
-	if h < 3 {
-		h = 3
-	}
-	return h
+	return max(e.sh/4, 3)
 }
 
 // ToggleTerminal opens or closes the integrated terminal
@@ -261,5 +257,3 @@ func (e *Editor) ResizeTerminal() {
 	e.updateTermSurface(th)
 	e.term.Resize(e.sw, th)
 }
-
-
