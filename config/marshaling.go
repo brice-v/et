@@ -37,7 +37,7 @@ func (k *Key) String() string {
 	base := ""
 	if keyName, ok := tcell.KeyNames[k.Key]; ok {
 		base = strings.ToLower(keyName)
-	} else if k.Key >= tcell.Key('a') && k.Key <= tcell.Key('z') {
+	} else if k.Key >= tcell.Key('!') && k.Key <= tcell.Key('~') {
 		base = string(rune(k.Key))
 	}
 	if len(parts) == 0 {

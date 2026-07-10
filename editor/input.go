@@ -46,11 +46,21 @@ func (e *Editor) currentFileCol() int {
 }
 
 func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
-	keyAsRune := ""
+	keyAsRune := k.Str()
 	key := k.Key()
+
+	slog.Info("key press", "name", k.Name())
+
+	if e.matchesToggleTerminal(key, keyAsRune, k.Modifiers()) {
+		slog.Info("toggle terminal")
+		e.ToggleTerminal()
+		return
+	}
+	if e.termOpen && e.term != nil {
+		e.term.HandleEvent(k)
+		return
+	}
 	switch key {
-	case tcell.KeyRune:
-		keyAsRune = k.Str()
 	case tcell.KeyUp:
 		e.handleMoveUp()
 	case tcell.KeyDown:
@@ -129,6 +139,38 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 			e.findNextMatch()
 		}
 	}
+}
+
+func (e *Editor) matchesToggleTerminal(key tcell.Key, keyAsRune string, mods tcell.ModMask) bool {
+	if keys.IsKey(key, keyAsRune, mods, e.cfg.KeyBindings.ToggleTerminal) {
+		return true
+	}
+	// Terminals can encode Shift by changing the rune (; -> :) or by adding ModShift.
+	// Try the alternative rune and/or strip extra ModShift from the event.
+	cfg := e.cfg.KeyBindings.ToggleTerminal
+
+	if mods&tcell.ModShift != 0 && keys.IsKey(key, keyAsRune, mods & ^tcell.ModShift, cfg) {
+		return true
+	}
+
+	var altKey tcell.Key
+	switch cfg.Key {
+	case tcell.Key(';'):
+		altKey = tcell.Key(':')
+	case tcell.Key(':'):
+		altKey = tcell.Key(';')
+	default:
+		return false
+	}
+
+	altCfg := config.Key{Key: altKey, Modifiers: cfg.Modifiers}
+	if keys.IsKey(key, keyAsRune, mods, altCfg) {
+		return true
+	}
+	if mods&tcell.ModShift != 0 && keys.IsKey(key, keyAsRune, mods & ^tcell.ModShift, altCfg) {
+		return true
+	}
+	return false
 }
 
 func (e *Editor) handleMoveUp() {

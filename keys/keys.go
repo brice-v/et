@@ -15,6 +15,10 @@ func NormalizeKey(key tcell.Key, keyAsRune string, mod tcell.ModMask) (tcell.Key
 		r := []rune(keyAsRune)[0]
 		return tcell.Key(unicode.ToLower(r)), mod
 	}
+	// OptAdvancedKeys reports Shift+Tab as KeyTab+ModShift instead of KeyBacktab
+	if key == tcell.KeyTab && mod&tcell.ModShift != 0 {
+		return tcell.KeyBacktab, mod & ^tcell.ModShift
+	}
 	return key, mod
 }
 

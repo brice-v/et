@@ -205,9 +205,48 @@ func (e *Editor) drawWelcomeMessage() {
 	}
 }
 
-func (e *Editor) Draw() {
-	e.s.Clear()
-	e.sw, e.sh = e.s.Size()
+func (e *Editor) drawTerminal() {
+	if !e.termOpen || e.term == nil {
+		return
+	}
+	e.term.Draw()
+	th := e.terminalHeight()
+	sepY := e.sh - th - 1
+	if sepY >= 0 {
+		sepStyle := e.baseStyle.Background(e.cfg.Colors.StatusBar.Color)
+		for x := range e.sw {
+			e.s.SetContent(x, sepY, ' ', nil, sepStyle)
+		}
+		title := "TERMINAL (" + e.termShell + ")"
+		for i, ch := range title {
+			if i >= e.sw {
+				break
+			}
+			e.s.SetContent(i, sepY, ch, nil, sepStyle)
+		}
+	}
+}
+
+func (e *Editor) drawTerminalCursor(th int) {
+	if !e.termOpen || e.term == nil {
+		e.s.ShowCursor(e.cx, e.cy)
+		return
+	}
+	row, col, style, vis := e.term.Cursor()
+	if vis {
+		e.s.SetCursorStyle(style)
+		e.s.ShowCursor(col, row+th)
+	} else {
+		e.s.HideCursor()
+	}
+}
+
+func (e *Editor) drawEditorArea(th int) int {
+	oldSh := e.sh
+	e.sh -= th + 1
+	if e.sh < 0 {
+		e.sh = 0
+	}
 	e.updateViewport()
 	e.drawLineNumbersOrTilde()
 	e.clampCursor()
@@ -216,6 +255,16 @@ func (e *Editor) Draw() {
 	e.drawStatusBar()
 	e.drawPrompt()
 	e.drawWelcomeMessage()
-	e.s.ShowCursor(e.cx, e.cy)
+	e.sh = oldSh
+	return oldSh - th
+}
+
+func (e *Editor) Draw() {
+	e.s.Clear()
+	e.sw, e.sh = e.s.Size()
+	th := e.terminalHeight()
+	termOff := e.drawEditorArea(th)
+	e.drawTerminal()
+	e.drawTerminalCursor(termOff)
 	e.s.Show()
 }

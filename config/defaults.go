@@ -104,3 +104,7 @@ func DefaultCursorStyle() string {
 func DefaultCursorColor() Color {
 	return Color{color.White}
 }
+
+func DefaultKeyBindingToggleTerminal() Key {
+	return Key{Key: tcell.Key(';'), Modifiers: tcell.ModCtrl}
+}

@@ -657,6 +657,75 @@ func TestKeyChordRoundTrip(t *testing.T) {
 	}
 }
 
+func TestDefaultToggleTerminalKey(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	wantKey := tcell.Key(';')
+	wantMod := tcell.ModCtrl
+	if kb.ToggleTerminal.Key != wantKey {
+		t.Errorf("ToggleTerminal.Key = %v, want %v", kb.ToggleTerminal.Key, wantKey)
+	}
+	if kb.ToggleTerminal.Modifiers != wantMod {
+		t.Errorf("ToggleTerminal.Modifiers = %v, want %v", kb.ToggleTerminal.Modifiers, wantMod)
+	}
+}
+
+func TestToggleTerminalKeyParseCtrlT(t *testing.T) {
+	jsonStr := `{"toggle_terminal": "ctrl+t"}`
+	var kb KeyBindings
+	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
+		t.Fatal(err)
+	}
+	if kb.ToggleTerminal.Key != tcell.Key('t') {
+		t.Errorf("Key = %v, want 't'", kb.ToggleTerminal.Key)
+	}
+	if kb.ToggleTerminal.Modifiers != tcell.ModCtrl {
+		t.Errorf("Modifiers = %v, want ModCtrl", kb.ToggleTerminal.Modifiers)
+	}
+}
+
+func TestToggleTerminalKeyParseColon(t *testing.T) {
+	jsonStr := `{"toggle_terminal": "ctrl+shift+:"}`
+	var kb KeyBindings
+	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
+		t.Fatal(err)
+	}
+	if kb.ToggleTerminal.Key != tcell.Key(':') {
+		t.Errorf("Key = %v, want ':'", kb.ToggleTerminal.Key)
+	}
+	if kb.ToggleTerminal.Modifiers != tcell.ModCtrl|tcell.ModShift {
+		t.Errorf("Modifiers = %v, want ModCtrl|ModShift", kb.ToggleTerminal.Modifiers)
+	}
+}
+
+func TestToggleTerminalKeyParseSemicolon(t *testing.T) {
+	jsonStr := `{"toggle_terminal": "ctrl+shift+;"}`
+	var kb KeyBindings
+	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
+		t.Fatal(err)
+	}
+	if kb.ToggleTerminal.Key != tcell.Key(';') {
+		t.Errorf("Key = %v, want ';'", kb.ToggleTerminal.Key)
+	}
+	if kb.ToggleTerminal.Modifiers != tcell.ModCtrl|tcell.ModShift {
+		t.Errorf("Modifiers = %v, want ModCtrl|ModShift", kb.ToggleTerminal.Modifiers)
+	}
+}
+
+func TestToggleTerminalKeyRoundTrip(t *testing.T) {
+	want := `"ctrl+t"`
+	var k Key
+	if err := json.Unmarshal([]byte(want), &k); err != nil {
+		t.Fatal(err)
+	}
+	got, err := json.Marshal(k)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Errorf("MarshalJSON = %s, want %s", string(got), want)
+	}
+}
+
 func TestCursorStyleFromString(t *testing.T) {
 	tests := []struct {
 		input string

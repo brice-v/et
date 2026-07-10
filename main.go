@@ -10,6 +10,7 @@ import (
 	"github.com/brice-v/et/config"
 	"github.com/brice-v/et/consts"
 	"github.com/brice-v/et/editor"
+	"github.com/brice-v/et/terminal"
 
 	"github.com/gdamore/tcell/v3"
 	_ "github.com/gdamore/tcell/v3/encoding"
@@ -39,7 +40,7 @@ func main() {
 		*fileName = os.Args[1]
 	}
 
-	screen, err := tcell.NewScreen()
+	screen, err := tcell.NewScreen(tcell.OptAdvancedKeys(true))
 	if err != nil {
 		slog.Error("creating screen", "err", err)
 		os.Exit(1)
@@ -59,6 +60,7 @@ func main() {
 		switch e := ev.(type) {
 		case *tcell.EventResize:
 			screen.Sync()
+			et.ResizeTerminal()
 			et.Draw()
 		case *tcell.EventKey:
 			et.HandleKeyPress(e)
@@ -66,6 +68,8 @@ func main() {
 			if et.Exit {
 				return
 			}
+			et.Draw()
+		case *terminal.EventRedraw, *terminal.EventClosed, *terminal.EventTitle:
 			et.Draw()
 		}
 	}

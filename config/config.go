@@ -56,6 +56,7 @@ type KeyBindings struct {
 	FindPrevious        Key      `json:"find_previous"`
 	FindSecondary1Chord KeyChord `json:"find_secondary1_chord"`
 	FindSecondary2Chord KeyChord `json:"find_secondary2_chord"`
+	ToggleTerminal      Key      `json:"toggle_terminal"`
 }
 
 type Config struct {
@@ -88,6 +89,7 @@ func NewDefault() *Config {
 			FindPrevious:        DefaultKeyBindingFindPrevious(),
 			FindSecondary1Chord: DefaultKeyBindingFindSecondary1Chord(),
 			FindSecondary2Chord: DefaultKeyBindingFindSecondary2Chord(),
+			ToggleTerminal:      DefaultKeyBindingToggleTerminal(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),

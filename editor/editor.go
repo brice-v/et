@@ -3,9 +3,12 @@ package editor
 import (
 	"fmt"
 	"log/slog"
+	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/brice-v/et/config"
+	"github.com/brice-v/et/terminal"
 
 	"github.com/gdamore/tcell/v3"
 )
@@ -72,6 +75,12 @@ type Editor struct {
 
 	// awaitingChord is true after the chord prefix key has been pressed
 	awaitingChord bool
+
+	// Terminal integration
+	term        *terminal.VT
+	termOpen    bool
+	termStarted bool
+	termShell   string
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
@@ -168,3 +177,89 @@ func (e *Editor) bufX(bufLine, vx int) int {
 func (e *Editor) bufY(vy int) int {
 	return e.vScrollOffset + vy
 }
+
+// termSurface wraps a tcell.Screen to offset drawing to a specific region
+type termSurface struct {
+	screen   tcell.Screen
+	offY     int
+	width    int
+	height   int
+}
+
+func (ts *termSurface) SetContent(x, y int, ch rune, comb []rune, style tcell.Style) {
+	ts.screen.SetContent(x, y+ts.offY, ch, comb, style)
+}
+
+func (ts *termSurface) Size() (int, int) {
+	return ts.width, ts.height
+}
+
+// terminalHeight returns the height of the terminal panel (minimum 3 rows)
+func (e *Editor) terminalHeight() int {
+	if !e.termOpen {
+		return 0
+	}
+	h := e.sh / 4
+	if h < 3 {
+		h = 3
+	}
+	return h
+}
+
+// ToggleTerminal opens or closes the integrated terminal
+func (e *Editor) ToggleTerminal() {
+	if e.termOpen {
+		e.termOpen = false
+		return
+	}
+	if e.term == nil {
+		e.term = terminal.New()
+	}
+	e.termOpen = true
+	th := e.terminalHeight()
+	vt := e.term
+	e.updateTermSurface(th)
+	vt.Resize(e.sw, th)
+	vt.Attach(func(ev tcell.Event) {
+		select {
+		case e.s.EventQ() <- ev:
+		default:
+		}
+	})
+	if !e.termStarted {
+		e.termStarted = true
+		e.termShell = os.Getenv("SHELL")
+		if e.termShell == "" {
+			e.termShell = "bash"
+		}
+		cmd := exec.Command(e.termShell)
+		go func() {
+			if err := vt.Start(cmd); err != nil {
+				slog.Error("terminal start", "err", err)
+			}
+		}()
+	}
+}
+
+func (e *Editor) updateTermSurface(th int) {
+	if e.term == nil {
+		return
+	}
+	e.term.SetSurface(&termSurface{
+		screen: e.s,
+		offY:   e.sh - th,
+		width:  e.sw,
+		height: th,
+	})
+}
+
+func (e *Editor) ResizeTerminal() {
+	if e.term == nil || !e.termOpen {
+		return
+	}
+	th := e.terminalHeight()
+	e.updateTermSurface(th)
+	e.term.Resize(e.sw, th)
+}
+
+

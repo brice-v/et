@@ -138,6 +138,70 @@ func TestIsKeyAny(t *testing.T) {
 	}
 }
 
+func TestIsKeySemicolonColon(t *testing.T) {
+	tests := []struct {
+		name      string
+		key       tcell.Key
+		keyAsRune string
+		mod       tcell.ModMask
+		cfgKey    config.Key
+		want      bool
+	}{
+		// Terminal sends base keycode with mods (kitty protocol)
+		{"base ; match ;", tcell.Key(';'), "", tcell.ModCtrl | tcell.ModShift, config.Key{Key: tcell.Key(';'), Modifiers: tcell.ModCtrl | tcell.ModShift}, true},
+		// Terminal sends shifted char as rune
+		{"shifted : match ;", tcell.KeyRune, ":", tcell.ModCtrl | tcell.ModShift, config.Key{Key: tcell.Key(';'), Modifiers: tcell.ModCtrl | tcell.ModShift}, false},
+		// Cross-match fails (IsKey doesn't do ;/: swapping)
+		{"base ; match :", tcell.Key(';'), "", tcell.ModCtrl | tcell.ModShift, config.Key{Key: tcell.Key(':'), Modifiers: tcell.ModCtrl | tcell.ModShift}, false},
+		// Terminal sends shifted char, config uses :
+		{"shifted : match :", tcell.KeyRune, ":", tcell.ModCtrl | tcell.ModShift, config.Key{Key: tcell.Key(':'), Modifiers: tcell.ModCtrl | tcell.ModShift}, true},
+		// ctrl+; without shift
+		{"ctrl ; no shift", tcell.KeyRune, ";", tcell.ModCtrl, config.Key{Key: tcell.Key(';'), Modifiers: tcell.ModCtrl}, true},
+		// ctrl+t (default toggle)
+		{"ctrl t legacy", tcell.KeyCtrlT, "", tcell.ModNone, config.Key{Key: tcell.Key('t'), Modifiers: tcell.ModCtrl}, true},
+		{"ctrl t advanced", tcell.KeyRune, "t", tcell.ModCtrl, config.Key{Key: tcell.Key('t'), Modifiers: tcell.ModCtrl}, true},
+		{"ctrl T advanced", tcell.KeyRune, "T", tcell.ModCtrl, config.Key{Key: tcell.Key('t'), Modifiers: tcell.ModCtrl}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsKey(tt.key, tt.keyAsRune, tt.mod, tt.cfgKey)
+			if got != tt.want {
+				t.Errorf("IsKey(%v, %q, %v, %v) = %v, want %v", tt.key, tt.keyAsRune, tt.mod, tt.cfgKey, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNormalizeShiftTab(t *testing.T) {
+	tests := []struct {
+		name      string
+		key       tcell.Key
+		keyAsRune string
+		mod       tcell.ModMask
+		wantKey   tcell.Key
+		wantMod   tcell.ModMask
+	}{
+		{"legacy backtab", tcell.KeyBacktab, "", tcell.ModNone, tcell.KeyBacktab, tcell.ModNone},
+		{"advanced shift+tab", tcell.KeyTab, "", tcell.ModShift, tcell.KeyBacktab, tcell.ModNone},
+		{"plain tab", tcell.KeyTab, "", tcell.ModNone, tcell.KeyTab, tcell.ModNone},
+		{"ctrl+tab", tcell.KeyTab, "", tcell.ModCtrl, tcell.KeyTab, tcell.ModCtrl},
+		{"shift+ctrl+tab", tcell.KeyTab, "", tcell.ModShift | tcell.ModCtrl, tcell.KeyBacktab, tcell.ModCtrl},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotKey, gotMod := NormalizeKey(tt.key, tt.keyAsRune, tt.mod)
+			if gotKey != tt.wantKey {
+				t.Errorf("key = %v, want %v", gotKey, tt.wantKey)
+			}
+			if gotMod != tt.wantMod {
+				t.Errorf("mod = %v, want %v", gotMod, tt.wantMod)
+			}
+		})
+	}
+}
+
 func TestIsKeyAnyEmptyBindings(t *testing.T) {
 	if IsKeyAny(tcell.KeyQ, "", tcell.ModNone, nil) {
 		t.Error("IsKeyAny with nil bindings should be false")
