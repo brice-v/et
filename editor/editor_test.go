@@ -11,46 +11,46 @@ type testScreen struct {
 	w, h int
 }
 
-func (ts *testScreen) Init() error                                            { return nil }
-func (ts *testScreen) Fini()                                                   {}
-func (ts *testScreen) Clear()                                                  {}
-func (ts *testScreen) Fill(rune, tcell.Style)                                  {}
-func (ts *testScreen) SetContent(int, int, rune, []rune, tcell.Style)           {}
-func (ts *testScreen) Get(int, int) (string, tcell.Style, int)                  { return "", tcell.StyleDefault, 1 }
-func (ts *testScreen) Put(int, int, string, tcell.Style) (string, int)          { return "", 0 }
-func (ts *testScreen) PutStr(int, int, string)                                   {}
-func (ts *testScreen) PutStrStyled(int, int, string, tcell.Style)                {}
-func (ts *testScreen) SetStyle(tcell.Style)                                      {}
-func (ts *testScreen) ShowCursor(int, int)                                       {}
-func (ts *testScreen) HideCursor()                                               {}
-func (ts *testScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color)          {}
-func (ts *testScreen) Show()                                                     {}
-func (ts *testScreen) Sync()                                                     {}
-func (ts *testScreen) CharacterSet() string                                      { return "" }
-func (ts *testScreen) RegisterRuneFallback(rune, string)                         {}
-func (ts *testScreen) UnregisterRuneFallback(rune)                               {}
-func (ts *testScreen) Resize(int, int, int, int)                                 {}
-func (ts *testScreen) Suspend() error                                            { return nil }
-func (ts *testScreen) Resume() error                                             { return nil }
-func (ts *testScreen) Beep() error                                               { return nil }
-func (ts *testScreen) SetSize(int, int)                                          {}
-func (ts *testScreen) Colors() int                                               { return 256 }
-func (ts *testScreen) EventQ() chan tcell.Event                                  { return nil }
-func (ts *testScreen) EnableMouse(...tcell.MouseFlags)                           {}
-func (ts *testScreen) DisableMouse()                                             {}
-func (ts *testScreen) EnablePaste()                                              {}
-func (ts *testScreen) DisablePaste()                                             {}
-func (ts *testScreen) EnableFocus()                                              {}
-func (ts *testScreen) DisableFocus()                                             {}
-func (ts *testScreen) LockRegion(int, int, int, int, bool)                       {}
-func (ts *testScreen) Tty() (tcell.Tty, bool)                                    { return nil, false }
-func (ts *testScreen) SetTitle(string)                                           {}
-func (ts *testScreen) SetClipboard([]byte)                                       {}
-func (ts *testScreen) GetClipboard()                                             {}
-func (ts *testScreen) HasClipboard() bool                                        { return false }
-func (ts *testScreen) ShowNotification(string, string)                           {}
-func (ts *testScreen) KeyboardProtocol() tcell.KeyProtocol                       { return 0 }
-func (ts *testScreen) Terminal() (string, string)                                { return "", "" }
+func (ts *testScreen) Init() error                                      { return nil }
+func (ts *testScreen) Fini()                                            {}
+func (ts *testScreen) Clear()                                           {}
+func (ts *testScreen) Fill(rune, tcell.Style)                           {}
+func (ts *testScreen) SetContent(int, int, rune, []rune, tcell.Style)   {}
+func (ts *testScreen) Get(int, int) (string, tcell.Style, int)          { return "", tcell.StyleDefault, 1 }
+func (ts *testScreen) Put(int, int, string, tcell.Style) (string, int)  { return "", 0 }
+func (ts *testScreen) PutStr(int, int, string)                          {}
+func (ts *testScreen) PutStrStyled(int, int, string, tcell.Style)       {}
+func (ts *testScreen) SetStyle(tcell.Style)                             {}
+func (ts *testScreen) ShowCursor(int, int)                              {}
+func (ts *testScreen) HideCursor()                                      {}
+func (ts *testScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color) {}
+func (ts *testScreen) Show()                                            {}
+func (ts *testScreen) Sync()                                            {}
+func (ts *testScreen) CharacterSet() string                             { return "" }
+func (ts *testScreen) RegisterRuneFallback(rune, string)                {}
+func (ts *testScreen) UnregisterRuneFallback(rune)                      {}
+func (ts *testScreen) Resize(int, int, int, int)                        {}
+func (ts *testScreen) Suspend() error                                   { return nil }
+func (ts *testScreen) Resume() error                                    { return nil }
+func (ts *testScreen) Beep() error                                      { return nil }
+func (ts *testScreen) SetSize(int, int)                                 {}
+func (ts *testScreen) Colors() int                                      { return 256 }
+func (ts *testScreen) EventQ() chan tcell.Event                         { return nil }
+func (ts *testScreen) EnableMouse(...tcell.MouseFlags)                  {}
+func (ts *testScreen) DisableMouse()                                    {}
+func (ts *testScreen) EnablePaste()                                     {}
+func (ts *testScreen) DisablePaste()                                    {}
+func (ts *testScreen) EnableFocus()                                     {}
+func (ts *testScreen) DisableFocus()                                    {}
+func (ts *testScreen) LockRegion(int, int, int, int, bool)              {}
+func (ts *testScreen) Tty() (tcell.Tty, bool)                           { return nil, false }
+func (ts *testScreen) SetTitle(string)                                  {}
+func (ts *testScreen) SetClipboard([]byte)                              {}
+func (ts *testScreen) GetClipboard()                                    {}
+func (ts *testScreen) HasClipboard() bool                               { return false }
+func (ts *testScreen) ShowNotification(string, string)                  {}
+func (ts *testScreen) KeyboardProtocol() tcell.KeyProtocol              { return 0 }
+func (ts *testScreen) Terminal() (string, string)                       { return "", "" }
 
 func (ts *testScreen) Size() (int, int) {
 	return ts.w, ts.h
