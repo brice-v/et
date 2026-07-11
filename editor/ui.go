@@ -223,7 +223,7 @@ func (e *Editor) drawTerminal() {
 		for x := range e.sw {
 			e.s.SetContent(x, sepY, ' ', nil, sepStyle)
 		}
-		title := "TERMINAL (" + e.termShell + ")"
+		title := " TERMINAL (" + e.termShell + ")"
 		for i, ch := range title {
 			if i >= e.sw {
 				break
