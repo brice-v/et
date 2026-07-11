@@ -7,607 +7,211 @@ import (
 )
 
 func keyCode(ev *tcell.EventKey) string {
-	key := strings.Builder{}
-	switch ev.Modifiers() {
-	case tcell.ModNone:
-		switch ev.Key() {
-		case tcell.KeyRune:
-			key.WriteString(ev.Str())
-		default:
-			if str, ok := keyCodes[ev.Key()]; ok {
-				key.WriteString(str)
-			} else {
-				key.WriteRune(rune(ev.Key()))
-			}
+	key := ev.Key()
+	mod := ev.Modifiers()
+
+	if mod == tcell.ModNone {
+		if key == tcell.KeyRune {
+			return ev.Str()
 		}
-	case tcell.ModShift:
-		switch ev.Key() {
-		case tcell.KeyUp:
-			key.WriteString(info.KeyShfUp)
-		case tcell.KeyDown:
-			key.WriteString(info.KeyShfDown)
-		case tcell.KeyRight:
-			key.WriteString(info.KeyShfRight)
-		case tcell.KeyLeft:
-			key.WriteString(info.KeyShfLeft)
-		case tcell.KeyHome:
-			key.WriteString(info.KeyShfHome)
-		case tcell.KeyEnd:
-			key.WriteString(info.KeyShfEnd)
-		case tcell.KeyInsert:
-			key.WriteString(info.KeyShfInsert)
-		case tcell.KeyDelete:
-			key.WriteString(info.KeyShfDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(info.KeyShfPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(info.KeyShfPgDn)
-		case tcell.KeyF1:
-			key.WriteString(info.KeyF13)
-		case tcell.KeyF2:
-			key.WriteString(info.KeyF14)
-		case tcell.KeyF3:
-			key.WriteString(info.KeyF15)
-		case tcell.KeyF4:
-			key.WriteString(info.KeyF16)
-		case tcell.KeyF5:
-			key.WriteString(info.KeyF17)
-		case tcell.KeyF6:
-			key.WriteString(info.KeyF18)
-		case tcell.KeyF7:
-			key.WriteString(info.KeyF19)
-		case tcell.KeyF8:
-			key.WriteString(info.KeyF20)
-		case tcell.KeyF9:
-			key.WriteString(info.KeyF21)
-		case tcell.KeyF10:
-			key.WriteString(info.KeyF22)
-		case tcell.KeyF11:
-			key.WriteString(info.KeyF23)
-		case tcell.KeyF12:
-			key.WriteString(info.KeyF24)
+		if s, ok := keyCodes[key]; ok {
+			return s
 		}
-	case tcell.ModAlt:
-		switch ev.Key() {
-		case tcell.KeyRune:
-			key.WriteString("\x1b")
-			key.WriteString(ev.Str())
-		case tcell.KeyUp:
-			key.WriteString(info.KeyAltUp)
-		case tcell.KeyDown:
-			key.WriteString(info.KeyAltDown)
-		case tcell.KeyRight:
-			key.WriteString(info.KeyAltRight)
-		case tcell.KeyLeft:
-			key.WriteString(info.KeyAltLeft)
-		case tcell.KeyHome:
-			key.WriteString(info.KeyAltHome)
-		case tcell.KeyEnd:
-			key.WriteString(info.KeyAltEnd)
-		case tcell.KeyInsert:
-			key.WriteString(extendedInfo.KeyAltInsert)
-		case tcell.KeyDelete:
-			key.WriteString(extendedInfo.KeyAltDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(extendedInfo.KeyAltPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(extendedInfo.KeyAltPgDown)
-		case tcell.KeyF1:
-			key.WriteString(info.KeyF49)
-		case tcell.KeyF2:
-			key.WriteString(info.KeyF50)
-		case tcell.KeyF3:
-			key.WriteString(info.KeyF51)
-		case tcell.KeyF4:
-			key.WriteString(info.KeyF53)
-		case tcell.KeyF5:
-			key.WriteString(info.KeyF54)
-		case tcell.KeyF6:
-			key.WriteString(info.KeyF55)
-		case tcell.KeyF7:
-			key.WriteString(info.KeyF56)
-		case tcell.KeyF8:
-			key.WriteString(info.KeyF57)
-		case tcell.KeyF9:
-			key.WriteString(info.KeyF58)
-		case tcell.KeyF10:
-			key.WriteString(info.KeyF59)
-		case tcell.KeyF11:
-			key.WriteString(info.KeyF60)
-		case tcell.KeyF12:
-			key.WriteString(info.KeyF61)
-		}
-	case tcell.ModCtrl:
-		switch ev.Key() {
-		case tcell.KeyUp:
-			key.WriteString(info.KeyCtrlUp)
-		case tcell.KeyDown:
-			key.WriteString(info.KeyCtrlDown)
-		case tcell.KeyRight:
-			key.WriteString(info.KeyCtrlRight)
-		case tcell.KeyLeft:
-			key.WriteString(info.KeyCtrlLeft)
-		case tcell.KeyHome:
-			key.WriteString(info.KeyCtrlHome)
-		case tcell.KeyEnd:
-			key.WriteString(info.KeyCtrlEnd)
-		case tcell.KeyInsert:
-			key.WriteString(extendedInfo.KeyCtrlInsert)
-		case tcell.KeyDelete:
-			key.WriteString(extendedInfo.KeyCtrlDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(extendedInfo.KeyCtrlPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(extendedInfo.KeyCtrlPgDown)
-		case tcell.KeyF1:
-			key.WriteString(info.KeyF25)
-		case tcell.KeyF2:
-			key.WriteString(info.KeyF26)
-		case tcell.KeyF3:
-			key.WriteString(info.KeyF27)
-		case tcell.KeyF4:
-			key.WriteString(info.KeyF28)
-		case tcell.KeyF5:
-			key.WriteString(info.KeyF29)
-		case tcell.KeyF6:
-			key.WriteString(info.KeyF30)
-		case tcell.KeyF7:
-			key.WriteString(info.KeyF31)
-		case tcell.KeyF8:
-			key.WriteString(info.KeyF32)
-		case tcell.KeyF9:
-			key.WriteString(info.KeyF33)
-		case tcell.KeyF10:
-			key.WriteString(info.KeyF34)
-		case tcell.KeyF11:
-			key.WriteString(info.KeyF35)
-		case tcell.KeyF12:
-			key.WriteString(info.KeyF36)
-		default:
-			if ev.Key() >= tcell.KeyCtrlA && ev.Key() <= tcell.KeyCtrlZ {
-				key.WriteByte(byte(ev.Key() - tcell.KeyCtrlA + 1))
-			} else {
-				key.WriteString(ev.Str())
-			}
-		}
-	case tcell.ModCtrl | tcell.ModShift:
-		switch ev.Key() {
-		case tcell.KeyUp:
-			key.WriteString(info.KeyCtrlShfUp)
-		case tcell.KeyDown:
-			key.WriteString(info.KeyCtrlShfDown)
-		case tcell.KeyRight:
-			key.WriteString(info.KeyCtrlShfRight)
-		case tcell.KeyLeft:
-			key.WriteString(info.KeyCtrlShfLeft)
-		case tcell.KeyHome:
-			key.WriteString(info.KeyCtrlShfHome)
-		case tcell.KeyEnd:
-			key.WriteString(info.KeyCtrlShfEnd)
-		case tcell.KeyInsert:
-			key.WriteString(extendedInfo.KeyCtrlShfInsert)
-		case tcell.KeyDelete:
-			key.WriteString(extendedInfo.KeyCtrlShfDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(extendedInfo.KeyCtrlShfPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(extendedInfo.KeyCtrlShfPgDown)
-		case tcell.KeyF1:
-			key.WriteString(info.KeyF37)
-		case tcell.KeyF2:
-			key.WriteString(info.KeyF38)
-		case tcell.KeyF3:
-			key.WriteString(info.KeyF39)
-		case tcell.KeyF4:
-			key.WriteString(info.KeyF40)
-		case tcell.KeyF5:
-			key.WriteString(info.KeyF41)
-		case tcell.KeyF6:
-			key.WriteString(info.KeyF42)
-		case tcell.KeyF7:
-			key.WriteString(info.KeyF43)
-		case tcell.KeyF8:
-			key.WriteString(info.KeyF44)
-		case tcell.KeyF9:
-			key.WriteString(info.KeyF45)
-		case tcell.KeyF10:
-			key.WriteString(info.KeyF46)
-		case tcell.KeyF11:
-			key.WriteString(info.KeyF47)
-		case tcell.KeyF12:
-			key.WriteString(info.KeyF48)
-		}
-	case tcell.ModAlt | tcell.ModShift:
-		switch ev.Key() {
-		case tcell.KeyUp:
-			key.WriteString(info.KeyAltShfUp)
-		case tcell.KeyDown:
-			key.WriteString(info.KeyAltShfDown)
-		case tcell.KeyRight:
-			key.WriteString(info.KeyAltShfRight)
-		case tcell.KeyLeft:
-			key.WriteString(info.KeyAltShfLeft)
-		case tcell.KeyHome:
-			key.WriteString(info.KeyAltShfHome)
-		case tcell.KeyEnd:
-			key.WriteString(info.KeyAltShfEnd)
-		case tcell.KeyInsert:
-			key.WriteString(extendedInfo.KeyAltShfInsert)
-		case tcell.KeyDelete:
-			key.WriteString(extendedInfo.KeyAltShfDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(extendedInfo.KeyAltShfPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(extendedInfo.KeyAltShfPgDown)
-		case tcell.KeyF1:
-			key.WriteString(info.KeyF61)
-		case tcell.KeyF2:
-			key.WriteString(info.KeyF62)
-		case tcell.KeyF3:
-			key.WriteString(info.KeyF63)
-		case tcell.KeyF4:
-			key.WriteString(info.KeyF64)
-		}
-	case tcell.ModAlt | tcell.ModCtrl:
-		switch ev.Key() {
-		case tcell.KeyUp:
-			key.WriteString(extendedInfo.KeyCtrlAltUp)
-		case tcell.KeyDown:
-			key.WriteString(extendedInfo.KeyCtrlAltDown)
-		case tcell.KeyRight:
-			key.WriteString(extendedInfo.KeyCtrlAltRight)
-		case tcell.KeyLeft:
-			key.WriteString(extendedInfo.KeyCtrlAltLeft)
-		case tcell.KeyHome:
-			key.WriteString(extendedInfo.KeyCtrlAltHome)
-		case tcell.KeyEnd:
-			key.WriteString(extendedInfo.KeyCtrlAltEnd)
-		case tcell.KeyInsert:
-			key.WriteString(extendedInfo.KeyCtrlAltInsert)
-		case tcell.KeyDelete:
-			key.WriteString(extendedInfo.KeyCtrlAltDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(extendedInfo.KeyCtrlAltPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(extendedInfo.KeyCtrlAltPgDown)
-		}
-	case tcell.ModAlt | tcell.ModCtrl | tcell.ModShift:
-		switch ev.Key() {
-		case tcell.KeyUp:
-			key.WriteString(extendedInfo.KeyCtrlAltShfUp)
-		case tcell.KeyDown:
-			key.WriteString(extendedInfo.KeyCtrlAltShfDown)
-		case tcell.KeyRight:
-			key.WriteString(extendedInfo.KeyCtrlAltShfRight)
-		case tcell.KeyLeft:
-			key.WriteString(extendedInfo.KeyCtrlAltShfLeft)
-		case tcell.KeyHome:
-			key.WriteString(extendedInfo.KeyCtrlAltShfHome)
-		case tcell.KeyEnd:
-			key.WriteString(extendedInfo.KeyCtrlAltShfEnd)
-		case tcell.KeyInsert:
-			key.WriteString(extendedInfo.KeyCtrlAltShfInsert)
-		case tcell.KeyDelete:
-			key.WriteString(extendedInfo.KeyCtrlAltShfDelete)
-		case tcell.KeyPgUp:
-			key.WriteString(extendedInfo.KeyCtrlAltShfPgUp)
-		case tcell.KeyPgDn:
-			key.WriteString(extendedInfo.KeyCtrlAltShfPgDown)
-		}
-	case tcell.ModMeta:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";9~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;9")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModShift:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";10~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;10")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModAlt:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";11~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;11")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModAlt | tcell.ModShift:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";12~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;12")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModCtrl:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";13~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;13")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModCtrl | tcell.ModShift:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";14~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;14")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModCtrl | tcell.ModAlt:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";15~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;15")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
-	case tcell.ModMeta | tcell.ModCtrl | tcell.ModAlt | tcell.ModShift:
-		// Meta keys we just do the math, only allowing modifiable keys
-		switch ev.Key() {
-		case tcell.KeyUp:
-		case tcell.KeyDown:
-		case tcell.KeyRight:
-		case tcell.KeyLeft:
-		case tcell.KeyHome:
-		case tcell.KeyEnd:
-		case tcell.KeyInsert:
-		case tcell.KeyDelete:
-		case tcell.KeyPgUp:
-		case tcell.KeyPgDn:
-		case tcell.KeyF1:
-		case tcell.KeyF2:
-		case tcell.KeyF3:
-		case tcell.KeyF4:
-		case tcell.KeyF5:
-		case tcell.KeyF6:
-		case tcell.KeyF7:
-		case tcell.KeyF8:
-		case tcell.KeyF9:
-		case tcell.KeyF10:
-		case tcell.KeyF11:
-		case tcell.KeyF12:
-		default:
-			return ""
-		}
-		kc := keyCodes[ev.Key()]
-		switch {
-		case strings.HasSuffix(kc, "~"):
-			key.WriteString(strings.TrimSuffix(kc, "~"))
-			key.WriteString(";16~")
-		default:
-			// Tcell is using khome etc instead of home, these are
-			// different codes (\x1b0H vs \x1b[H)
-			key.WriteString("\x1b[1;16")
-			key.WriteString(strings.TrimPrefix(kc, "\x1bO"))
-		}
+		return string(rune(key))
 	}
-	return key.String()
+
+	if mod == tcell.ModAlt && key == tcell.KeyRune {
+		return "\x1b" + ev.Str()
+	}
+
+	if mod == tcell.ModCtrl && key >= tcell.KeyCtrlA && key <= tcell.KeyCtrlZ {
+		return string(byte(key - tcell.KeyCtrlA + 1))
+	}
+
+	if mod&tcell.ModMeta != 0 {
+		return metaKeyCode(ev)
+	}
+
+	if s, ok := modLookup[mod][key]; ok {
+		return s
+	}
+	return ""
+}
+
+func metaKeyCode(ev *tcell.EventKey) string {
+	paramNum, ok := metaParamNums[ev.Modifiers()]
+	if !ok {
+		return ""
+	}
+	switch ev.Key() {
+	case tcell.KeyUp, tcell.KeyDown, tcell.KeyRight, tcell.KeyLeft,
+		tcell.KeyHome, tcell.KeyEnd, tcell.KeyInsert, tcell.KeyDelete,
+		tcell.KeyPgUp, tcell.KeyPgDn,
+		tcell.KeyF1, tcell.KeyF2, tcell.KeyF3, tcell.KeyF4,
+		tcell.KeyF5, tcell.KeyF6, tcell.KeyF7, tcell.KeyF8,
+		tcell.KeyF9, tcell.KeyF10, tcell.KeyF11, tcell.KeyF12:
+	default:
+		return ""
+	}
+	kc := keyCodes[ev.Key()]
+	switch {
+	case strings.HasSuffix(kc, "~"):
+		return strings.TrimSuffix(kc, "~") + ";" + paramNum + "~"
+	default:
+		return "\x1b[1;" + paramNum + strings.TrimPrefix(kc, "\x1bO")
+	}
+}
+
+type modMap map[tcell.Key]string
+
+var metaParamNums = map[tcell.ModMask]string{
+	tcell.ModMeta:                                                 "9",
+	tcell.ModMeta | tcell.ModShift:                                "10",
+	tcell.ModMeta | tcell.ModAlt:                                  "11",
+	tcell.ModMeta | tcell.ModAlt | tcell.ModShift:                 "12",
+	tcell.ModMeta | tcell.ModCtrl:                                 "13",
+	tcell.ModMeta | tcell.ModCtrl | tcell.ModShift:                "14",
+	tcell.ModMeta | tcell.ModCtrl | tcell.ModAlt:                  "15",
+	tcell.ModMeta | tcell.ModCtrl | tcell.ModAlt | tcell.ModShift: "16",
+}
+
+var modLookup = map[tcell.ModMask]modMap{
+	tcell.ModShift: {
+		tcell.KeyUp:     info.KeyShfUp,
+		tcell.KeyDown:   info.KeyShfDown,
+		tcell.KeyRight:  info.KeyShfRight,
+		tcell.KeyLeft:   info.KeyShfLeft,
+		tcell.KeyHome:   info.KeyShfHome,
+		tcell.KeyEnd:    info.KeyShfEnd,
+		tcell.KeyInsert: info.KeyShfInsert,
+		tcell.KeyDelete: info.KeyShfDelete,
+		tcell.KeyPgUp:   info.KeyShfPgUp,
+		tcell.KeyPgDn:   info.KeyShfPgDn,
+		tcell.KeyF1:     info.KeyF13,
+		tcell.KeyF2:     info.KeyF14,
+		tcell.KeyF3:     info.KeyF15,
+		tcell.KeyF4:     info.KeyF16,
+		tcell.KeyF5:     info.KeyF17,
+		tcell.KeyF6:     info.KeyF18,
+		tcell.KeyF7:     info.KeyF19,
+		tcell.KeyF8:     info.KeyF20,
+		tcell.KeyF9:     info.KeyF21,
+		tcell.KeyF10:    info.KeyF22,
+		tcell.KeyF11:    info.KeyF23,
+		tcell.KeyF12:    info.KeyF24,
+	},
+	tcell.ModAlt: {
+		tcell.KeyUp:     info.KeyAltUp,
+		tcell.KeyDown:   info.KeyAltDown,
+		tcell.KeyRight:  info.KeyAltRight,
+		tcell.KeyLeft:   info.KeyAltLeft,
+		tcell.KeyHome:   info.KeyAltHome,
+		tcell.KeyEnd:    info.KeyAltEnd,
+		tcell.KeyInsert: extendedInfo.KeyAltInsert,
+		tcell.KeyDelete: extendedInfo.KeyAltDelete,
+		tcell.KeyPgUp:   extendedInfo.KeyAltPgUp,
+		tcell.KeyPgDn:   extendedInfo.KeyAltPgDown,
+		tcell.KeyF1:     info.KeyF49,
+		tcell.KeyF2:     info.KeyF50,
+		tcell.KeyF3:     info.KeyF51,
+		tcell.KeyF4:     info.KeyF53,
+		tcell.KeyF5:     info.KeyF54,
+		tcell.KeyF6:     info.KeyF55,
+		tcell.KeyF7:     info.KeyF56,
+		tcell.KeyF8:     info.KeyF57,
+		tcell.KeyF9:     info.KeyF58,
+		tcell.KeyF10:    info.KeyF59,
+		tcell.KeyF11:    info.KeyF60,
+		tcell.KeyF12:    info.KeyF61,
+	},
+	tcell.ModCtrl: {
+		tcell.KeyUp:     info.KeyCtrlUp,
+		tcell.KeyDown:   info.KeyCtrlDown,
+		tcell.KeyRight:  info.KeyCtrlRight,
+		tcell.KeyLeft:   info.KeyCtrlLeft,
+		tcell.KeyHome:   info.KeyCtrlHome,
+		tcell.KeyEnd:    info.KeyCtrlEnd,
+		tcell.KeyInsert: extendedInfo.KeyCtrlInsert,
+		tcell.KeyDelete: extendedInfo.KeyCtrlDelete,
+		tcell.KeyPgUp:   extendedInfo.KeyCtrlPgUp,
+		tcell.KeyPgDn:   extendedInfo.KeyCtrlPgDown,
+		tcell.KeyF1:     info.KeyF25,
+		tcell.KeyF2:     info.KeyF26,
+		tcell.KeyF3:     info.KeyF27,
+		tcell.KeyF4:     info.KeyF28,
+		tcell.KeyF5:     info.KeyF29,
+		tcell.KeyF6:     info.KeyF30,
+		tcell.KeyF7:     info.KeyF31,
+		tcell.KeyF8:     info.KeyF32,
+		tcell.KeyF9:     info.KeyF33,
+		tcell.KeyF10:    info.KeyF34,
+		tcell.KeyF11:    info.KeyF35,
+		tcell.KeyF12:    info.KeyF36,
+	},
+	tcell.ModCtrl | tcell.ModShift: {
+		tcell.KeyUp:     info.KeyCtrlShfUp,
+		tcell.KeyDown:   info.KeyCtrlShfDown,
+		tcell.KeyRight:  info.KeyCtrlShfRight,
+		tcell.KeyLeft:   info.KeyCtrlShfLeft,
+		tcell.KeyHome:   info.KeyCtrlShfHome,
+		tcell.KeyEnd:    info.KeyCtrlShfEnd,
+		tcell.KeyInsert: extendedInfo.KeyCtrlShfInsert,
+		tcell.KeyDelete: extendedInfo.KeyCtrlShfDelete,
+		tcell.KeyPgUp:   extendedInfo.KeyCtrlShfPgUp,
+		tcell.KeyPgDn:   extendedInfo.KeyCtrlShfPgDown,
+		tcell.KeyF1:     info.KeyF37,
+		tcell.KeyF2:     info.KeyF38,
+		tcell.KeyF3:     info.KeyF39,
+		tcell.KeyF4:     info.KeyF40,
+		tcell.KeyF5:     info.KeyF41,
+		tcell.KeyF6:     info.KeyF42,
+		tcell.KeyF7:     info.KeyF43,
+		tcell.KeyF8:     info.KeyF44,
+		tcell.KeyF9:     info.KeyF45,
+		tcell.KeyF10:    info.KeyF46,
+		tcell.KeyF11:    info.KeyF47,
+		tcell.KeyF12:    info.KeyF48,
+	},
+	tcell.ModAlt | tcell.ModShift: {
+		tcell.KeyUp:     info.KeyAltShfUp,
+		tcell.KeyDown:   info.KeyAltShfDown,
+		tcell.KeyRight:  info.KeyAltShfRight,
+		tcell.KeyLeft:   info.KeyAltShfLeft,
+		tcell.KeyHome:   info.KeyAltShfHome,
+		tcell.KeyEnd:    info.KeyAltShfEnd,
+		tcell.KeyInsert: extendedInfo.KeyAltShfInsert,
+		tcell.KeyDelete: extendedInfo.KeyAltShfDelete,
+		tcell.KeyPgUp:   extendedInfo.KeyAltShfPgUp,
+		tcell.KeyPgDn:   extendedInfo.KeyAltShfPgDown,
+		tcell.KeyF1:     info.KeyF61,
+		tcell.KeyF2:     info.KeyF62,
+		tcell.KeyF3:     info.KeyF63,
+		tcell.KeyF4:     info.KeyF64,
+	},
+	tcell.ModAlt | tcell.ModCtrl: {
+		tcell.KeyUp:     extendedInfo.KeyCtrlAltUp,
+		tcell.KeyDown:   extendedInfo.KeyCtrlAltDown,
+		tcell.KeyRight:  extendedInfo.KeyCtrlAltRight,
+		tcell.KeyLeft:   extendedInfo.KeyCtrlAltLeft,
+		tcell.KeyHome:   extendedInfo.KeyCtrlAltHome,
+		tcell.KeyEnd:    extendedInfo.KeyCtrlAltEnd,
+		tcell.KeyInsert: extendedInfo.KeyCtrlAltInsert,
+		tcell.KeyDelete: extendedInfo.KeyCtrlAltDelete,
+		tcell.KeyPgUp:   extendedInfo.KeyCtrlAltPgUp,
+		tcell.KeyPgDn:   extendedInfo.KeyCtrlAltPgDown,
+	},
+	tcell.ModAlt | tcell.ModCtrl | tcell.ModShift: {
+		tcell.KeyUp:     extendedInfo.KeyCtrlAltShfUp,
+		tcell.KeyDown:   extendedInfo.KeyCtrlAltShfDown,
+		tcell.KeyRight:  extendedInfo.KeyCtrlAltShfRight,
+		tcell.KeyLeft:   extendedInfo.KeyCtrlAltShfLeft,
+		tcell.KeyHome:   extendedInfo.KeyCtrlAltShfHome,
+		tcell.KeyEnd:    extendedInfo.KeyCtrlAltShfEnd,
+		tcell.KeyInsert: extendedInfo.KeyCtrlAltShfInsert,
+		tcell.KeyDelete: extendedInfo.KeyCtrlAltShfDelete,
+		tcell.KeyPgUp:   extendedInfo.KeyCtrlAltShfPgUp,
+		tcell.KeyPgDn:   extendedInfo.KeyCtrlAltShfPgDown,
+	},
 }
 
 var keyCodes = map[tcell.Key]string{

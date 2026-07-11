@@ -2,8 +2,6 @@ package terminal
 
 import (
 	"time"
-
-	"github.com/gdamore/tcell/v3"
 )
 
 // EventTerminal is a generic terminal event
@@ -45,17 +43,6 @@ type EventTitle struct {
 
 func (ev *EventTitle) Title() string {
 	return ev.title
-}
-
-// EventMouseMode is emitted when the terminal mouse mode changes
-type EventMouseMode struct {
-	modes []tcell.MouseFlags
-
-	*EventTerminal
-}
-
-func (ev *EventMouseMode) Flags() []tcell.MouseFlags {
-	return ev.modes
 }
 
 // EventBell is emitted when BEL is received
