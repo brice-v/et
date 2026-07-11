@@ -96,10 +96,6 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		e.syncStickyCol()
 	}
 
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
-		e.Exit = true
-		return
-	}
 	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleLineEnding) {
 		e.buffer.ToggleLineEnding()
 		return
