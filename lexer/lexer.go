@@ -17,8 +17,6 @@ type Lexer struct {
 	prevCh    rune // previous char read
 	posInLine int
 
-	TabCount int
-
 	identsMap map[string]consts.HlStyleType
 	operators string
 
@@ -47,7 +45,7 @@ type Token struct {
 
 // New returns a pointer to the lexer struct
 func New(input []rune, idents map[string]consts.HlStyleType, operators string,
-	comentToken string, stringTokens []string) *Lexer {
+	commentToken string, stringTokens []string) *Lexer {
 	st := make([][]rune, len(stringTokens))
 	for i, s := range stringTokens {
 		st[i] = []rune(s)
@@ -56,7 +54,7 @@ func New(input []rune, idents map[string]consts.HlStyleType, operators string,
 		input:        input,
 		identsMap:    idents,
 		operators:    operators,
-		commentToken: []rune(comentToken),
+		commentToken: []rune(commentToken),
 		stringTokens: st,
 	}
 	l.readChar()
@@ -155,7 +153,6 @@ func (l *Lexer) readNumber() (TokenType, string) {
 		}
 	}
 	dotFlag := false
-	eFlag := false
 	for isDigit(l.ch) || (l.ch == '_' && isDigit(l.peekChar())) {
 		if l.peekChar() == '.' && !dotFlag && l.peekSecondChar() != '.' {
 			dotFlag = true
@@ -163,11 +160,8 @@ func (l *Lexer) readNumber() (TokenType, string) {
 			l.readChar()
 		}
 		if (l.peekChar() == 'e' || l.peekChar() == 'E') && (l.peekSecondChar() == '+' || l.peekSecondChar() == '-' || isDigit(l.peekSecondChar())) {
-			eFlag = true
-			// skip e
 			l.readChar()
 			if l.peekChar() == '+' || l.peekChar() == '-' {
-				// skip + or -
 				l.readChar()
 			}
 		}
@@ -176,14 +170,8 @@ func (l *Lexer) readNumber() (TokenType, string) {
 	isBigVal := l.ch == 'n' && (l.isWs(l.peekChar()) || !isLetter(l.peekChar()))
 	tok := TTNumber
 
-	if dotFlag || eFlag {
-		if isBigVal {
-			l.readChar()
-		}
-	} else {
-		if isBigVal {
-			l.readChar()
-		}
+	if isBigVal {
+		l.readChar()
 	}
 	return tok, string(l.input[position:l.pos])
 }
@@ -263,9 +251,6 @@ func (l *Lexer) readString() (string, error) {
 }
 
 func (l *Lexer) isWs(ch rune) bool {
-	if ch == '\t' {
-		l.TabCount++
-	}
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }
 

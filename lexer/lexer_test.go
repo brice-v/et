@@ -396,14 +396,6 @@ func TestNextTokenMultipleLines(t *testing.T) {
 	}
 }
 
-func TestNextTokenTabCount(t *testing.T) {
-	l := newTestLexer("\tx")
-	l.NextToken()
-	if l.TabCount != 1 {
-		t.Errorf("expected TabCount=1, got %d", l.TabCount)
-	}
-}
-
 func TestNextTokenNumberWithLeadingDot(t *testing.T) {
 	l := newTestLexer("0.5")
 	tok := l.NextToken()
