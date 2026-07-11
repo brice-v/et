@@ -50,9 +50,6 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 	keyAsRune := k.Str()
 	key := k.Key()
 	e.chordInvalidSuffix = ""
-
-	slog.Info("key press", "name", k.Name())
-
 	if e.handleAwaitingChord(key, keyAsRune, k) {
 		return
 	}
