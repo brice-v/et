@@ -68,40 +68,32 @@ func (b *windowsPtyBackend) WriteString(s string) (int, error) {
 	return b.stdin.Write([]byte(s))
 }
 
-func (b *windowsPtyBackend) Close() error {
-	var firstErr error
+func (b *windowsPtyBackend) Close() (err error) {
 	if b.cmd != nil && b.cmd.Process != nil {
-		if err := b.cmd.Process.Kill(); err != nil {
+		if err = b.cmd.Process.Kill(); err != nil {
 			slog.Warn("error killing command", "err", err)
-			if firstErr == nil {
-				firstErr = err
-			}
+			return
 		}
-		if err := b.cmd.Wait(); err != nil {
+		if err = b.cmd.Wait(); err != nil {
 			slog.Warn("error waiting for command", "err", err)
-			if firstErr == nil {
-				firstErr = err
-			}
+			return
 		}
 	}
-	if err := b.stdin.Close(); err != nil {
-		if firstErr == nil {
-			firstErr = err
-		}
+	if err = b.stdin.Close(); err != nil {
+		slog.Warn("error closing stdin", "err", err)
+		return
 	}
-	if err := b.stdout.Close(); err != nil {
-		if firstErr == nil {
-			firstErr = err
-		}
+	if err = b.stdout.Close(); err != nil {
+		slog.Warn("error closing stdout", "err", err)
+		return
 	}
 	if b.stderr != nil {
-		if err := b.stderr.Close(); err != nil {
-			if firstErr == nil {
-				firstErr = err
-			}
+		if err = b.stderr.Close(); err != nil {
+			slog.Warn("error closing stderr", "err", err)
+			return
 		}
 	}
-	return firstErr
+	return
 }
 
 func (b *windowsPtyBackend) Resize(cols, rows uint16) error {
