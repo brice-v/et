@@ -107,7 +107,9 @@ func (e *Editor) drawStatusBar() {
 		modStr = " [*]"
 	}
 	statusMsg := fmt.Sprintf(" et - %s%s | %s to quit", fnameStr, modStr, quitKeyBindsString)
-	if e.awaitingChord {
+	if e.chordInvalidSuffix != "" {
+		statusMsg += " [" + e.chordInvalidSuffix + "]"
+	} else if e.awaitingChord {
 		statusMsg += " [awaiting chord...]"
 	}
 	for i, ch := range statusMsg {

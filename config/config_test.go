@@ -657,72 +657,47 @@ func TestKeyChordRoundTrip(t *testing.T) {
 	}
 }
 
-func TestDefaultToggleTerminalKey(t *testing.T) {
+func TestDefaultToggleTerminalChord(t *testing.T) {
 	kb := NewDefault().KeyBindings
-	wantKey := tcell.Key(';')
-	wantMod := tcell.ModCtrl
-	if kb.ToggleTerminal.Key != wantKey {
-		t.Errorf("ToggleTerminal.Key = %v, want %v", kb.ToggleTerminal.Key, wantKey)
+	wantPrefix := Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}
+	wantSuffix := Key{Key: tcell.Key(';'), Modifiers: tcell.ModNone}
+	if kb.ToggleTerminal.Prefix != wantPrefix {
+		t.Errorf("ToggleTerminal.Prefix = %v, want %v", kb.ToggleTerminal.Prefix, wantPrefix)
 	}
-	if kb.ToggleTerminal.Modifiers != wantMod {
-		t.Errorf("ToggleTerminal.Modifiers = %v, want %v", kb.ToggleTerminal.Modifiers, wantMod)
+	if kb.ToggleTerminal.Suffix != wantSuffix {
+		t.Errorf("ToggleTerminal.Suffix = %v, want %v", kb.ToggleTerminal.Suffix, wantSuffix)
 	}
 }
 
-func TestToggleTerminalKeyParseCtrlT(t *testing.T) {
-	jsonStr := `{"toggle_terminal": "ctrl+t"}`
+func TestToggleTerminalChordParseJSON(t *testing.T) {
+	jsonStr := `{"toggle_terminal": {"prefix": "ctrl+e", "suffix": ";"}}`
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
-	if kb.ToggleTerminal.Key != tcell.Key('t') {
-		t.Errorf("Key = %v, want 't'", kb.ToggleTerminal.Key)
+	if kb.ToggleTerminal.Prefix.Key != tcell.Key('e') || kb.ToggleTerminal.Prefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("Prefix = %v, want ctrl+e", kb.ToggleTerminal.Prefix)
 	}
-	if kb.ToggleTerminal.Modifiers != tcell.ModCtrl {
-		t.Errorf("Modifiers = %v, want ModCtrl", kb.ToggleTerminal.Modifiers)
-	}
-}
-
-func TestToggleTerminalKeyParseColon(t *testing.T) {
-	jsonStr := `{"toggle_terminal": "ctrl+shift+:"}`
-	var kb KeyBindings
-	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
-		t.Fatal(err)
-	}
-	if kb.ToggleTerminal.Key != tcell.Key(':') {
-		t.Errorf("Key = %v, want ':'", kb.ToggleTerminal.Key)
-	}
-	if kb.ToggleTerminal.Modifiers != tcell.ModCtrl|tcell.ModShift {
-		t.Errorf("Modifiers = %v, want ModCtrl|ModShift", kb.ToggleTerminal.Modifiers)
+	if kb.ToggleTerminal.Suffix.Key != tcell.Key(';') || kb.ToggleTerminal.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("Suffix = %v, want ;", kb.ToggleTerminal.Suffix)
 	}
 }
 
-func TestToggleTerminalKeyParseSemicolon(t *testing.T) {
-	jsonStr := `{"toggle_terminal": "ctrl+shift+;"}`
-	var kb KeyBindings
-	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
-		t.Fatal(err)
-	}
-	if kb.ToggleTerminal.Key != tcell.Key(';') {
-		t.Errorf("Key = %v, want ';'", kb.ToggleTerminal.Key)
-	}
-	if kb.ToggleTerminal.Modifiers != tcell.ModCtrl|tcell.ModShift {
-		t.Errorf("Modifiers = %v, want ModCtrl|ModShift", kb.ToggleTerminal.Modifiers)
-	}
-}
-
-func TestToggleTerminalKeyRoundTrip(t *testing.T) {
-	want := `"ctrl+t"`
-	var k Key
-	if err := json.Unmarshal([]byte(want), &k); err != nil {
-		t.Fatal(err)
-	}
-	got, err := json.Marshal(k)
+func TestToggleTerminalChordRoundTrip(t *testing.T) {
+	kc := DefaultKeyBindingToggleTerminalChord()
+	got, err := json.Marshal(kc)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != want {
-		t.Errorf("MarshalJSON = %s, want %s", string(got), want)
+	var kc2 KeyChord
+	if err := json.Unmarshal(got, &kc2); err != nil {
+		t.Fatal(err)
+	}
+	if kc2.Prefix != kc.Prefix {
+		t.Errorf("Prefix round-trip = %v, want %v", kc2.Prefix, kc.Prefix)
+	}
+	if kc2.Suffix != kc.Suffix {
+		t.Errorf("Suffix round-trip = %v, want %v", kc2.Suffix, kc.Suffix)
 	}
 }
 
@@ -897,6 +872,136 @@ func TestToggleExpandTabsKeyParse(t *testing.T) {
 	}
 	if kb.ToggleExpandTabs.Modifiers != tcell.ModCtrl {
 		t.Errorf("Modifiers = %v, want ModCtrl", kb.ToggleExpandTabs.Modifiers)
+	}
+}
+
+func TestDefaultTerminalHeightPercentage(t *testing.T) {
+	cfg := NewDefault()
+	if cfg.TerminalHeightPercentage != 0.25 {
+		t.Errorf("TerminalHeightPercentage = %f, want 0.25", cfg.TerminalHeightPercentage)
+	}
+}
+
+func TestDefaultTerminalSizeChords(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	wantPrefix := Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}
+
+	if kb.TerminalIncreaseChord.Prefix != wantPrefix {
+		t.Errorf("TerminalIncreaseChord.Prefix = %v, want %v", kb.TerminalIncreaseChord.Prefix, wantPrefix)
+	}
+	if kb.TerminalIncreaseChord.Suffix.Key != tcell.Key('+') || kb.TerminalIncreaseChord.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("TerminalIncreaseChord.Suffix = %v, want +", kb.TerminalIncreaseChord.Suffix)
+	}
+
+	if kb.TerminalDecreaseChord.Prefix != wantPrefix {
+		t.Errorf("TerminalDecreaseChord.Prefix = %v, want %v", kb.TerminalDecreaseChord.Prefix, wantPrefix)
+	}
+	if kb.TerminalDecreaseChord.Suffix.Key != tcell.Key('-') || kb.TerminalDecreaseChord.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("TerminalDecreaseChord.Suffix = %v, want -", kb.TerminalDecreaseChord.Suffix)
+	}
+}
+
+func TestKeyStringPlusMinus(t *testing.T) {
+	plus := Key{Key: tcell.Key('+'), Modifiers: tcell.ModNone}
+	if got := plus.String(); got != "+" {
+		t.Errorf("Key('+').String() = %q, want %q", got, "+")
+	}
+	minus := Key{Key: tcell.Key('-'), Modifiers: tcell.ModNone}
+	if got := minus.String(); got != "-" {
+		t.Errorf("Key('-').String() = %q, want %q", got, "-")
+	}
+}
+
+func TestParseKeyBindingPlusMinus(t *testing.T) {
+	tests := []struct {
+		input string
+		key   tcell.Key
+		mod   tcell.ModMask
+	}{
+		{"+", tcell.Key('+'), tcell.ModNone},
+		{"-", tcell.Key('-'), tcell.ModNone},
+		{"ctrl+e", tcell.Key('e'), tcell.ModCtrl},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			key, mod, err := parseKeyBinding(tt.input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if key != tt.key {
+				t.Errorf("key = %v, want %v", key, tt.key)
+			}
+			if mod != tt.mod {
+				t.Errorf("mod = %v, want %v", mod, tt.mod)
+			}
+		})
+	}
+}
+
+func TestTerminalChordRoundTrip(t *testing.T) {
+	jsonStr := `{"prefix": "ctrl+e", "suffix": "+"}`
+	var kc KeyChord
+	if err := json.Unmarshal([]byte(jsonStr), &kc); err != nil {
+		t.Fatal(err)
+	}
+	if kc.Prefix.Key != tcell.Key('e') || kc.Prefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("Prefix = %v, want ctrl+e", kc.Prefix)
+	}
+	if kc.Suffix.Key != tcell.Key('+') || kc.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("Suffix = %v, want +", kc.Suffix)
+	}
+
+	got, err := json.Marshal(kc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var kc2 KeyChord
+	if err := json.Unmarshal(got, &kc2); err != nil {
+		t.Fatal(err)
+	}
+	if kc2.Prefix != kc.Prefix {
+		t.Errorf("Prefix round-trip = %v, want %v", kc2.Prefix, kc.Prefix)
+	}
+	if kc2.Suffix != kc.Suffix {
+		t.Errorf("Suffix round-trip = %v, want %v", kc2.Suffix, kc.Suffix)
+	}
+
+	// Also test the minus chord
+	jsonStr2 := `{"prefix": "ctrl+e", "suffix": "-"}`
+	var kc3 KeyChord
+	if err := json.Unmarshal([]byte(jsonStr2), &kc3); err != nil {
+		t.Fatal(err)
+	}
+	if kc3.Suffix.Key != tcell.Key('-') {
+		t.Errorf("Suffix = %v, want -", kc3.Suffix)
+	}
+}
+
+func TestTerminalHeightPercentageRoundTrip(t *testing.T) {
+	jsonStr := `{"terminal_height_percentage": 0.5}`
+	var cfg Config
+	if err := json.Unmarshal([]byte(jsonStr), &cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.TerminalHeightPercentage != 0.5 {
+		t.Errorf("TerminalHeightPercentage = %f, want 0.5", cfg.TerminalHeightPercentage)
+	}
+
+	// Marshal/unmarshal a minimal wrapper to avoid zero-value Key errors
+	type wrapper struct {
+		TerminalHeightPercentage float64 `json:"terminal_height_percentage"`
+	}
+	w := wrapper{TerminalHeightPercentage: cfg.TerminalHeightPercentage}
+	got, err := json.Marshal(w)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var w2 wrapper
+	if err := json.Unmarshal(got, &w2); err != nil {
+		t.Fatal(err)
+	}
+	if w2.TerminalHeightPercentage != w.TerminalHeightPercentage {
+		t.Errorf("TerminalHeightPercentage round-trip = %f, want %f", w2.TerminalHeightPercentage, w.TerminalHeightPercentage)
 	}
 }
 

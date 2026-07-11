@@ -75,6 +75,11 @@ func initKeyNamesReverse() {
 }
 
 func parseKeyBinding(s string) (tcell.Key, tcell.ModMask, error) {
+	// '+' collides with the modifier separator in strings.Split so handle it directly.
+	if s == "+" {
+		return tcell.Key('+'), 0, nil
+	}
+
 	parts := strings.Split(s, "+")
 	if len(parts) == 0 {
 		return 0, 0, fmt.Errorf("empty key binding")

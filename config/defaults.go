@@ -105,8 +105,8 @@ func DefaultCursorColor() Color {
 	return Color{color.White}
 }
 
-func DefaultKeyBindingToggleTerminal() Key {
-	return Key{Key: tcell.Key(';'), Modifiers: tcell.ModCtrl}
+func DefaultKeyBindingToggleTerminalChord() KeyChord {
+	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key(';'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingToggleLineEnding() Key {
@@ -123,4 +123,16 @@ func DefaultLineEnding() string {
 
 func DefaultExpandTabs() bool {
 	return false
+}
+
+func DefaultTerminalHeightPercentage() float64 {
+	return 0.25
+}
+
+func DefaultKeyBindingTerminalIncreaseChord() KeyChord {
+	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('+'), Modifiers: tcell.ModNone}}
+}
+
+func DefaultKeyBindingTerminalDecreaseChord() KeyChord {
+	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('-'), Modifiers: tcell.ModNone}}
 }

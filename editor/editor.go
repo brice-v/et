@@ -78,6 +78,8 @@ type Editor struct {
 
 	// awaitingChord is true after the chord prefix key has been pressed
 	awaitingChord bool
+	// chordInvalidSuffix is set when an invalid chord suffix is pressed
+	chordInvalidSuffix string
 
 	// expandTabs controls whether tabs are converted to spaces on insert
 	expandTabs bool
@@ -87,6 +89,8 @@ type Editor struct {
 	termOpen    bool
 	termStarted bool
 	termShell   string
+	// termHeight is the runtime-adjusted terminal height (0 = use auto/config)
+	termHeight int
 }
 
 func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
@@ -124,6 +128,7 @@ func New(s tcell.Screen, cfg *config.Config, fileName string) *Editor {
 		hl:            NewHighlightState(cfg, fileExtension),
 		promptMode:    promptModeNormal,
 		expandTabs:    cfg.ExpandTabs,
+		termHeight:    0,
 	}
 }
 
@@ -243,7 +248,40 @@ func (e *Editor) terminalHeight() int {
 	if !e.termOpen {
 		return 0
 	}
-	return max(e.sh/4, 3)
+	if e.termHeight > 0 {
+		return max(e.termHeight, 3)
+	}
+	h := int(float64(e.sh) * e.cfg.TerminalHeightPercentage)
+	if h <= 0 {
+		h = e.sh / 4
+	}
+	return max(h, 3)
+}
+
+// IncreaseTerminalHeight increases the terminal panel height by 1 row.
+func (e *Editor) IncreaseTerminalHeight() {
+	if !e.termOpen {
+		return
+	}
+	th := e.terminalHeight()
+	if th <= 0 {
+		return
+	}
+	e.termHeight = th + 1
+	e.ResizeTerminal()
+}
+
+// DecreaseTerminalHeight decreases the terminal panel height by 1 row (minimum 3).
+func (e *Editor) DecreaseTerminalHeight() {
+	if !e.termOpen {
+		return
+	}
+	th := e.terminalHeight()
+	if th <= 0 {
+		return
+	}
+	e.termHeight = max(th-1, 3)
+	e.ResizeTerminal()
 }
 
 // ToggleTerminal opens or closes the integrated terminal

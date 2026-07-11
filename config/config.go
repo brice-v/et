@@ -49,16 +49,18 @@ type Colors struct {
 }
 
 type KeyBindings struct {
-	Quit                Key      `json:"quit"`
-	ExitPrompt          Key      `json:"exit_prompt"`
-	Find                Key      `json:"find"`
-	FindNext            Key      `json:"find_next"`
-	FindPrevious        Key      `json:"find_previous"`
-	FindSecondary1Chord KeyChord `json:"find_secondary1_chord"`
-	FindSecondary2Chord KeyChord `json:"find_secondary2_chord"`
-	ToggleTerminal      Key      `json:"toggle_terminal"`
-	ToggleLineEnding    Key      `json:"toggle_line_ending"`
-	ToggleExpandTabs    Key      `json:"toggle_expand_tabs"`
+	Quit                 Key      `json:"quit"`
+	ExitPrompt           Key      `json:"exit_prompt"`
+	Find                 Key      `json:"find"`
+	FindNext             Key      `json:"find_next"`
+	FindPrevious         Key      `json:"find_previous"`
+	FindSecondary1Chord  KeyChord `json:"find_secondary1_chord"`
+	FindSecondary2Chord  KeyChord `json:"find_secondary2_chord"`
+	ToggleTerminal       KeyChord `json:"toggle_terminal"`
+	ToggleLineEnding     Key      `json:"toggle_line_ending"`
+	ToggleExpandTabs     Key      `json:"toggle_expand_tabs"`
+	TerminalIncreaseChord KeyChord `json:"terminal_increase_chord"`
+	TerminalDecreaseChord KeyChord `json:"terminal_decrease_chord"`
 }
 
 type Config struct {
@@ -73,6 +75,7 @@ type Config struct {
 	CursorColor         Color             `json:"cursor_color"`
 	DefaultLineEnding   string            `json:"default_line_ending"`
 	ExpandTabs          bool              `json:"expand_tabs"`
+	TerminalHeightPercentage float64       `json:"terminal_height_percentage"`
 }
 
 func NewDefault() *Config {
@@ -86,16 +89,18 @@ func NewDefault() *Config {
 			Languages:             DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
-			Quit:                DefaultKeyBindingQuit(),
-			ExitPrompt:          DefaultKeyBindingExitPrompt(),
-			Find:                DefaultKeyBindingFind(),
-			FindNext:            DefaultKeyBindingFindNext(),
-			FindPrevious:        DefaultKeyBindingFindPrevious(),
-			FindSecondary1Chord: DefaultKeyBindingFindSecondary1Chord(),
-			FindSecondary2Chord: DefaultKeyBindingFindSecondary2Chord(),
-			ToggleTerminal:      DefaultKeyBindingToggleTerminal(),
-			ToggleLineEnding:    DefaultKeyBindingToggleLineEnding(),
-			ToggleExpandTabs:    DefaultKeyBindingToggleExpandTabs(),
+			Quit:                 DefaultKeyBindingQuit(),
+			ExitPrompt:           DefaultKeyBindingExitPrompt(),
+			Find:                 DefaultKeyBindingFind(),
+			FindNext:             DefaultKeyBindingFindNext(),
+			FindPrevious:         DefaultKeyBindingFindPrevious(),
+			FindSecondary1Chord:  DefaultKeyBindingFindSecondary1Chord(),
+			FindSecondary2Chord:  DefaultKeyBindingFindSecondary2Chord(),
+			ToggleTerminal:       DefaultKeyBindingToggleTerminalChord(),
+			ToggleLineEnding:     DefaultKeyBindingToggleLineEnding(),
+			ToggleExpandTabs:     DefaultKeyBindingToggleExpandTabs(),
+			TerminalIncreaseChord: DefaultKeyBindingTerminalIncreaseChord(),
+			TerminalDecreaseChord: DefaultKeyBindingTerminalDecreaseChord(),
 		},
 		TabWidth:            DefaultTabWidth(),
 		LeftPadString:       DefaultLeftPadString(),
@@ -106,6 +111,7 @@ func NewDefault() *Config {
 		CursorColor:         DefaultCursorColor(),
 		DefaultLineEnding:   DefaultLineEnding(),
 		ExpandTabs:          DefaultExpandTabs(),
+		TerminalHeightPercentage: DefaultTerminalHeightPercentage(),
 	}
 }
 
