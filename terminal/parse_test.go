@@ -1,7 +1,6 @@
 package terminal
 
 import (
-	"bytes"
 	"reflect"
 	"strings"
 	"testing"
@@ -154,8 +153,10 @@ func TestAnywhere(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := bytes.NewBuffer(nil)
-			parse := NewParser(r)
+			parse := &Parser{
+				sequences: make(chan Sequence, 2),
+				state:     ground,
+			}
 			called := false
 			parse.exit = func() {
 				called = true
