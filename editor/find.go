@@ -44,11 +44,15 @@ func (e *Editor) findMatches(input string) {
 	e.Find.Matches = e.Find.Matches[:0]
 	for lineNo, line := range e.buffer.lines {
 		lineText := string(line)
-		n := e.findIndex(lineText, input)
-		if n == -1 {
-			continue
+		col := 0
+		for col < len(lineText) {
+			n := e.findIndex(lineText[col:], input)
+			if n == -1 {
+				break
+			}
+			e.Find.Matches = append(e.Find.Matches, matchPos{line: lineNo, col: col + n})
+			col += n + len(input)
 		}
-		e.Find.Matches = append(e.Find.Matches, matchPos{line: lineNo, col: n})
 	}
 	e.Find.CurrentMatchIdx = 0
 	if len(e.Find.Matches) > 0 {
