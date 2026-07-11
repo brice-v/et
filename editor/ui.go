@@ -136,6 +136,10 @@ func (e *Editor) drawStatusBar() {
 	}
 	cursorLine := e.vScrollOffset + e.cy + 1
 	cursorCol := e.stickyCol + 1
+	bufL := e.vScrollOffset + e.cy
+	if bufL >= 0 && bufL < e.buffer.NumLines() {
+		cursorCol = e.visualCol(e.buffer.Line(bufL), e.stickyCol) + 1
+	}
 	posStr := fmt.Sprintf("%s [%s %s] Ln %d, Col %d", ft, leStr, tsStr, cursorLine, cursorCol)
 	posX := max(e.sw-len(posStr), 0)
 	for i, ch := range posStr {
