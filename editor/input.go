@@ -57,11 +57,6 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		return
 	}
 
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit) {
-		e.Exit = true
-		return
-	}
-
 	if e.termOpen && e.term != nil {
 		e.term.HandleEvent(k)
 		return
@@ -96,35 +91,20 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		e.syncStickyCol()
 	}
 
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleLineEnding) {
-		e.buffer.ToggleLineEnding()
-		return
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleExpandTabs) {
-		e.ToggleExpandTabs()
-		return
-	}
 	if key == tcell.KeyRune {
 		e.handleInsertRune(keyAsRune)
 	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ExitPrompt) {
 		if e.promptLabel != nil {
 			e.exitPrompt()
 		}
-	} else if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find) {
-		if e.promptMode == promptModeFind {
-			e.Find.Mode = findModeExact
-			e.Find.LastSearchTerm = ""
-			e.updatePromptLabel(e.getPromptFindLabel())
-		} else {
-			e.promptMode = promptModeFind
-			e.prompt(e.getPromptFindLabel())
-		}
-	} else if e.promptMode == promptModeFind && keys.IsKeyAny(key, keyAsRune, k.Modifiers(), []config.Key{e.cfg.KeyBindings.FindNext, e.cfg.KeyBindings.FindPrevious}) {
-		isPrev := keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindPrevious)
-		if isPrev {
-			e.findPreviousMatch()
-		} else {
-			e.findNextMatch()
+	}
+	if e.promptMode == promptModeFind && key != tcell.KeyRune {
+		if keys.IsKeyAny(key, keyAsRune, k.Modifiers(), []config.Key{e.cfg.KeyBindings.FindNext, e.cfg.KeyBindings.FindPrevious}) {
+			if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindPrevious) {
+				e.findPreviousMatch()
+			} else {
+				e.findNextMatch()
+			}
 		}
 	}
 }
@@ -139,6 +119,43 @@ func (e *Editor) handleAwaitingChord(key tcell.Key, keyAsRune string, k *tcell.E
 	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ExitPrompt) {
 		return true
 	}
+	// Global chord actions
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit.Suffix) {
+		e.Exit = true
+		return true
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find.Suffix) {
+		if e.promptMode == promptModeFind {
+			e.Find.Mode = findModeExact
+			e.Find.LastSearchTerm = ""
+			e.updatePromptLabel(e.getPromptFindLabel())
+		} else {
+			e.promptMode = promptModeFind
+			e.prompt(e.getPromptFindLabel())
+		}
+		return true
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleLineEnding.Suffix) {
+		e.buffer.ToggleLineEnding()
+		return true
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleExpandTabs.Suffix) {
+		e.ToggleExpandTabs()
+		return true
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleTerminal.Suffix) {
+		e.ToggleTerminal()
+		return true
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.TerminalIncreaseChord.Suffix) {
+		e.IncreaseTerminalHeight()
+		return true
+	}
+	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.TerminalDecreaseChord.Suffix) {
+		e.DecreaseTerminalHeight()
+		return true
+	}
+	// Find mode specific suffixes
 	if e.promptMode == promptModeFind {
 		if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary1Chord.Suffix) {
 			e.Find.Mode = findModeIgnoreCase
@@ -153,32 +170,14 @@ func (e *Editor) handleAwaitingChord(key tcell.Key, keyAsRune string, k *tcell.E
 			return true
 		}
 	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.TerminalIncreaseChord.Suffix) {
-		e.IncreaseTerminalHeight()
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.TerminalDecreaseChord.Suffix) {
-		e.DecreaseTerminalHeight()
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleTerminal.Suffix) {
-		e.ToggleTerminal()
-		return true
-	}
 	e.chordInvalidSuffix = "invalid suffix " + k.Name()
 	return true
 }
 
-// startChord checks if the key matches any chord prefix and enters chord awaiting mode.
+// startChord checks if the key matches the configured chord prefix and enters chord awaiting mode.
 // It returns true if a chord was started.
 func (e *Editor) startChord(key tcell.Key, keyAsRune string, mods tcell.ModMask) bool {
-	if keys.IsKeyAny(key, keyAsRune, mods, []config.Key{
-		e.cfg.KeyBindings.FindSecondary1Chord.Prefix,
-		e.cfg.KeyBindings.FindSecondary2Chord.Prefix,
-		e.cfg.KeyBindings.TerminalIncreaseChord.Prefix,
-		e.cfg.KeyBindings.TerminalDecreaseChord.Prefix,
-		e.cfg.KeyBindings.ToggleTerminal.Prefix,
-	}) {
+	if keys.IsKey(key, keyAsRune, mods, e.cfg.ChordPrefix) {
 		e.awaitingChord = true
 		return true
 	}

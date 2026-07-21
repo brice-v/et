@@ -49,21 +49,22 @@ type Colors struct {
 }
 
 type KeyBindings struct {
-	Quit                  Key      `json:"quit"`
 	ExitPrompt            Key      `json:"exit_prompt"`
-	Find                  Key      `json:"find"`
 	FindNext              Key      `json:"find_next"`
 	FindPrevious          Key      `json:"find_previous"`
+	Quit                  KeyChord `json:"quit"`
+	Find                  KeyChord `json:"find"`
 	FindSecondary1Chord   KeyChord `json:"find_secondary1_chord"`
 	FindSecondary2Chord   KeyChord `json:"find_secondary2_chord"`
 	ToggleTerminal        KeyChord `json:"toggle_terminal"`
-	ToggleLineEnding      Key      `json:"toggle_line_ending"`
-	ToggleExpandTabs      Key      `json:"toggle_expand_tabs"`
+	ToggleLineEnding      KeyChord `json:"toggle_line_ending"`
+	ToggleExpandTabs      KeyChord `json:"toggle_expand_tabs"`
 	TerminalIncreaseChord KeyChord `json:"terminal_increase_chord"`
 	TerminalDecreaseChord KeyChord `json:"terminal_decrease_chord"`
 }
 
 type Config struct {
+	ChordPrefix              Key               `json:"chord_prefix"`
 	Colors                   Colors            `json:"colors"`
 	KeyBindings              KeyBindings       `json:"keybindings"`
 	TabWidth                 int               `json:"tab_width"`
@@ -80,6 +81,7 @@ type Config struct {
 
 func NewDefault() *Config {
 	return &Config{
+		ChordPrefix: DefaultChordPrefix(),
 		Colors: Colors{
 			Foreground:            DefaultColorForeground(),
 			Background:            DefaultColorBackground(),
@@ -89,11 +91,11 @@ func NewDefault() *Config {
 			Languages:             DefaultLanguagesColorMap(),
 		},
 		KeyBindings: KeyBindings{
-			Quit:                  DefaultKeyBindingQuit(),
 			ExitPrompt:            DefaultKeyBindingExitPrompt(),
-			Find:                  DefaultKeyBindingFind(),
 			FindNext:              DefaultKeyBindingFindNext(),
 			FindPrevious:          DefaultKeyBindingFindPrevious(),
+			Quit:                  DefaultKeyBindingQuit(),
+			Find:                  DefaultKeyBindingFind(),
 			FindSecondary1Chord:   DefaultKeyBindingFindSecondary1Chord(),
 			FindSecondary2Chord:   DefaultKeyBindingFindSecondary2Chord(),
 			ToggleTerminal:        DefaultKeyBindingToggleTerminalChord(),

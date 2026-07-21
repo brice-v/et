@@ -24,7 +24,7 @@
 		}
 	},
 	"keybindings": {
-		"quit": "ctrl+q"
+		"quit": {"prefix": "ctrl+e", "suffix": "q"}
 	},
 	"tab_width": 4,
 	"left_pad_string": "~",

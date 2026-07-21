@@ -69,18 +69,24 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestKeyBindingsRoundTrip(t *testing.T) {
-	jsonStr := `{"quit": "ctrl+q"}`
+	jsonStr := `{"quit": {"prefix": "ctrl+e", "suffix": "q"}}`
 
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
 
-	if kb.Quit.Key != tcell.KeyQ {
-		t.Errorf("Quit.Key = %v, want KeyQ", kb.Quit.Key)
+	if kb.Quit.Prefix.Key != tcell.Key('e') {
+		t.Errorf("Quit.Prefix.Key = %v, want Key('e')", kb.Quit.Prefix.Key)
 	}
-	if kb.Quit.Modifiers != tcell.ModCtrl {
-		t.Errorf("Quit.Modifiers = %v, want ModCtrl", kb.Quit.Modifiers)
+	if kb.Quit.Prefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("Quit.Prefix.Modifiers = %v, want ModCtrl", kb.Quit.Prefix.Modifiers)
+	}
+	if kb.Quit.Suffix.Key != tcell.Key('q') {
+		t.Errorf("Quit.Suffix.Key = %v, want Key('q')", kb.Quit.Suffix.Key)
+	}
+	if kb.Quit.Suffix.Modifiers != tcell.ModNone {
+		t.Errorf("Quit.Suffix.Modifiers = %v, want ModNone", kb.Quit.Suffix.Modifiers)
 	}
 }
 
@@ -279,11 +285,11 @@ func TestParseFile(t *testing.T) {
 	if cfg.ShowLineNumbers != want.ShowLineNumbers {
 		t.Errorf("ShowLineNumbers = %t, want %t", cfg.ShowLineNumbers, want.ShowLineNumbers)
 	}
-	if cfg.KeyBindings.Quit.Key != want.KeyBindings.Quit.Key {
-		t.Errorf("Quit.Key = %v, want %v", cfg.KeyBindings.Quit.Key, want.KeyBindings.Quit.Key)
+	if cfg.KeyBindings.Quit.Prefix.Key != want.KeyBindings.Quit.Prefix.Key {
+		t.Errorf("Quit.Prefix.Key = %v, want %v", cfg.KeyBindings.Quit.Prefix.Key, want.KeyBindings.Quit.Prefix.Key)
 	}
-	if cfg.KeyBindings.Quit.Modifiers != want.KeyBindings.Quit.Modifiers {
-		t.Errorf("Quit.Modifiers = %v, want %v", cfg.KeyBindings.Quit.Modifiers, want.KeyBindings.Quit.Modifiers)
+	if cfg.KeyBindings.Quit.Prefix.Modifiers != want.KeyBindings.Quit.Prefix.Modifiers {
+		t.Errorf("Quit.Prefix.Modifiers = %v, want %v", cfg.KeyBindings.Quit.Prefix.Modifiers, want.KeyBindings.Quit.Prefix.Modifiers)
 	}
 	if len(cfg.FileExtensions) != len(want.FileExtensions) {
 		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
@@ -321,11 +327,11 @@ func TestParseMinimalDefaults(t *testing.T) {
 	if cfg.LeftPadString != want.LeftPadString {
 		t.Errorf("LeftPadString = %q, want default %q", cfg.LeftPadString, want.LeftPadString)
 	}
-	if cfg.KeyBindings.Quit.Key != want.KeyBindings.Quit.Key {
-		t.Errorf("Quit.Key = %v, want default %v", cfg.KeyBindings.Quit.Key, want.KeyBindings.Quit.Key)
+	if cfg.KeyBindings.Quit.Prefix.Key != want.KeyBindings.Quit.Prefix.Key {
+		t.Errorf("Quit.Prefix.Key = %v, want default %v", cfg.KeyBindings.Quit.Prefix.Key, want.KeyBindings.Quit.Prefix.Key)
 	}
-	if cfg.KeyBindings.Quit.Modifiers != want.KeyBindings.Quit.Modifiers {
-		t.Errorf("Quit.Modifiers = %v, want default %v", cfg.KeyBindings.Quit.Modifiers, want.KeyBindings.Quit.Modifiers)
+	if cfg.KeyBindings.Quit.Prefix.Modifiers != want.KeyBindings.Quit.Prefix.Modifiers {
+		t.Errorf("Quit.Prefix.Modifiers = %v, want default %v", cfg.KeyBindings.Quit.Prefix.Modifiers, want.KeyBindings.Quit.Prefix.Modifiers)
 	}
 	if len(cfg.FileExtensions) != len(want.FileExtensions) {
 		t.Errorf("len(FileExtensions) = %d, want %d", len(cfg.FileExtensions), len(want.FileExtensions))
@@ -333,6 +339,90 @@ func TestParseMinimalDefaults(t *testing.T) {
 	for k, v := range want.FileExtensions {
 		if cfg.FileExtensions[k] != v {
 			t.Errorf("FileExtensions[%q] = %q, want default %q", k, cfg.FileExtensions[k], v)
+		}
+	}
+}
+
+func TestDefaultChordPrefix(t *testing.T) {
+	prefix := DefaultChordPrefix()
+	if prefix.Key != tcell.Key('e') || prefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("DefaultChordPrefix = %v, want ctrl+e", prefix)
+	}
+}
+
+func TestConfigChordPrefix(t *testing.T) {
+	cfg := NewDefault()
+	if cfg.ChordPrefix.Key != tcell.Key('e') || cfg.ChordPrefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("Config.ChordPrefix = %v, want ctrl+e", cfg.ChordPrefix)
+	}
+}
+
+func TestDefaultQuitChord(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	wantPrefix := DefaultChordPrefix()
+	wantSuffix := Key{Key: tcell.Key('q'), Modifiers: tcell.ModNone}
+	if kb.Quit.Prefix != wantPrefix {
+		t.Errorf("Quit.Prefix = %v, want %v", kb.Quit.Prefix, wantPrefix)
+	}
+	if kb.Quit.Suffix != wantSuffix {
+		t.Errorf("Quit.Suffix = %v, want %v", kb.Quit.Suffix, wantSuffix)
+	}
+}
+
+func TestDefaultFindChord(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	wantPrefix := DefaultChordPrefix()
+	wantSuffix := Key{Key: tcell.Key('f'), Modifiers: tcell.ModNone}
+	if kb.Find.Prefix != wantPrefix {
+		t.Errorf("Find.Prefix = %v, want %v", kb.Find.Prefix, wantPrefix)
+	}
+	if kb.Find.Suffix != wantSuffix {
+		t.Errorf("Find.Suffix = %v, want %v", kb.Find.Suffix, wantSuffix)
+	}
+}
+
+func TestChordPrefixRoundTrip(t *testing.T) {
+	type partial struct {
+		ChordPrefix Key `json:"chord_prefix"`
+	}
+	jsonStr := `{"chord_prefix": "ctrl+b"}`
+	var p partial
+	if err := json.Unmarshal([]byte(jsonStr), &p); err != nil {
+		t.Fatal(err)
+	}
+	if p.ChordPrefix.Key != tcell.Key('b') || p.ChordPrefix.Modifiers != tcell.ModCtrl {
+		t.Errorf("ChordPrefix = %v, want ctrl+b", p.ChordPrefix)
+	}
+	got, err := json.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var p2 partial
+	if err := json.Unmarshal(got, &p2); err != nil {
+		t.Fatal(err)
+	}
+	if p2.ChordPrefix != p.ChordPrefix {
+		t.Errorf("ChordPrefix round-trip = %v, want %v", p2.ChordPrefix, p.ChordPrefix)
+	}
+}
+
+func TestChordBindingsAllUseChordPrefix(t *testing.T) {
+	kb := NewDefault().KeyBindings
+	want := DefaultChordPrefix()
+	chords := []KeyChord{
+		kb.Quit,
+		kb.Find,
+		kb.FindSecondary1Chord,
+		kb.FindSecondary2Chord,
+		kb.ToggleTerminal,
+		kb.ToggleLineEnding,
+		kb.ToggleExpandTabs,
+		kb.TerminalIncreaseChord,
+		kb.TerminalDecreaseChord,
+	}
+	for i, kc := range chords {
+		if kc.Prefix != want {
+			t.Errorf("chord[%d].Prefix = %v, want %v", i, kc.Prefix, want)
 		}
 	}
 }
@@ -567,21 +657,21 @@ func TestColorUnmarshalJSONError(t *testing.T) {
 }
 
 func TestKeyBindingsRoundTripWithModifier(t *testing.T) {
-	jsonStr := `{"quit": "ctrl+shift+q"}`
+	jsonStr := `{"quit": {"prefix": "ctrl+e", "suffix": "shift+q"}}`
 
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
 
-	wantKey := tcell.KeyQ
-	wantMod := tcell.ModCtrl | tcell.ModShift
-
-	if kb.Quit.Key != wantKey {
-		t.Errorf("Quit.Key = %v, want %v", kb.Quit.Key, wantKey)
+	if kb.Quit.Prefix.Key != tcell.Key('e') {
+		t.Errorf("Quit.Prefix.Key = %v, want Key('e')", kb.Quit.Prefix.Key)
 	}
-	if kb.Quit.Modifiers != wantMod {
-		t.Errorf("Quit.Modifiers = %v, want %v", kb.Quit.Modifiers, wantMod)
+	if kb.Quit.Suffix.Key != tcell.KeyQ {
+		t.Errorf("Quit.Suffix.Key = %v, want KeyQ", kb.Quit.Suffix.Key)
+	}
+	if kb.Quit.Suffix.Modifiers != tcell.ModShift {
+		t.Errorf("Quit.Suffix.Modifiers = %v, want ModShift", kb.Quit.Suffix.Modifiers)
 	}
 }
 
@@ -803,25 +893,25 @@ func TestDefaultExpandTabs(t *testing.T) {
 
 func TestDefaultToggleLineEndingKey(t *testing.T) {
 	kb := NewDefault().KeyBindings
-	wantKey := tcell.Key('l')
-	wantMod := tcell.ModCtrl
-	if kb.ToggleLineEnding.Key != wantKey {
-		t.Errorf("ToggleLineEnding.Key = %v, want %v", kb.ToggleLineEnding.Key, wantKey)
+	wantPrefix := DefaultChordPrefix()
+	wantSuffix := Key{Key: tcell.Key('l'), Modifiers: tcell.ModNone}
+	if kb.ToggleLineEnding.Prefix != wantPrefix {
+		t.Errorf("ToggleLineEnding.Prefix = %v, want %v", kb.ToggleLineEnding.Prefix, wantPrefix)
 	}
-	if kb.ToggleLineEnding.Modifiers != wantMod {
-		t.Errorf("ToggleLineEnding.Modifiers = %v, want %v", kb.ToggleLineEnding.Modifiers, wantMod)
+	if kb.ToggleLineEnding.Suffix != wantSuffix {
+		t.Errorf("ToggleLineEnding.Suffix = %v, want %v", kb.ToggleLineEnding.Suffix, wantSuffix)
 	}
 }
 
 func TestDefaultToggleExpandTabsKey(t *testing.T) {
 	kb := NewDefault().KeyBindings
-	wantKey := tcell.Key('t')
-	wantMod := tcell.ModCtrl
-	if kb.ToggleExpandTabs.Key != wantKey {
-		t.Errorf("ToggleExpandTabs.Key = %v, want %v", kb.ToggleExpandTabs.Key, wantKey)
+	wantPrefix := DefaultChordPrefix()
+	wantSuffix := Key{Key: tcell.Key('t'), Modifiers: tcell.ModNone}
+	if kb.ToggleExpandTabs.Prefix != wantPrefix {
+		t.Errorf("ToggleExpandTabs.Prefix = %v, want %v", kb.ToggleExpandTabs.Prefix, wantPrefix)
 	}
-	if kb.ToggleExpandTabs.Modifiers != wantMod {
-		t.Errorf("ToggleExpandTabs.Modifiers = %v, want %v", kb.ToggleExpandTabs.Modifiers, wantMod)
+	if kb.ToggleExpandTabs.Suffix != wantSuffix {
+		t.Errorf("ToggleExpandTabs.Suffix = %v, want %v", kb.ToggleExpandTabs.Suffix, wantSuffix)
 	}
 }
 
@@ -848,30 +938,30 @@ func TestExpandTabsParse(t *testing.T) {
 }
 
 func TestToggleLineEndingKeyParse(t *testing.T) {
-	jsonStr := `{"toggle_line_ending": "ctrl+shift+l"}`
+	jsonStr := `{"toggle_line_ending": {"prefix": "ctrl+e", "suffix": "ctrl+shift+l"}}`
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
-	if kb.ToggleLineEnding.Key != tcell.Key('l') {
-		t.Errorf("Key = %v, want 'l'", kb.ToggleLineEnding.Key)
+	if kb.ToggleLineEnding.Suffix.Key != tcell.Key('l') {
+		t.Errorf("Suffix.Key = %v, want 'l'", kb.ToggleLineEnding.Suffix.Key)
 	}
-	if kb.ToggleLineEnding.Modifiers != tcell.ModCtrl|tcell.ModShift {
-		t.Errorf("Modifiers = %v, want ModCtrl|ModShift", kb.ToggleLineEnding.Modifiers)
+	if kb.ToggleLineEnding.Suffix.Modifiers != tcell.ModCtrl|tcell.ModShift {
+		t.Errorf("Suffix.Modifiers = %v, want ModCtrl|ModShift", kb.ToggleLineEnding.Suffix.Modifiers)
 	}
 }
 
 func TestToggleExpandTabsKeyParse(t *testing.T) {
-	jsonStr := `{"toggle_expand_tabs": "ctrl+t"}`
+	jsonStr := `{"toggle_expand_tabs": {"prefix": "ctrl+e", "suffix": "ctrl+t"}}`
 	var kb KeyBindings
 	if err := json.Unmarshal([]byte(jsonStr), &kb); err != nil {
 		t.Fatal(err)
 	}
-	if kb.ToggleExpandTabs.Key != tcell.Key('t') {
-		t.Errorf("Key = %v, want 't'", kb.ToggleExpandTabs.Key)
+	if kb.ToggleExpandTabs.Suffix.Key != tcell.Key('t') {
+		t.Errorf("Suffix.Key = %v, want 't'", kb.ToggleExpandTabs.Suffix.Key)
 	}
-	if kb.ToggleExpandTabs.Modifiers != tcell.ModCtrl {
-		t.Errorf("Modifiers = %v, want ModCtrl", kb.ToggleExpandTabs.Modifiers)
+	if kb.ToggleExpandTabs.Suffix.Modifiers != tcell.ModCtrl {
+		t.Errorf("Suffix.Modifiers = %v, want ModCtrl", kb.ToggleExpandTabs.Suffix.Modifiers)
 	}
 }
 

@@ -37,24 +37,28 @@ func DefaultShowLineNumbers() bool {
 	return true
 }
 
-func DefaultKeyBindingQuit() Key {
-	return Key{Key: tcell.KeyQ, Modifiers: tcell.ModCtrl}
+func DefaultChordPrefix() Key {
+	return Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}
+}
+
+func DefaultKeyBindingQuit() KeyChord {
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('q'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingExitPrompt() Key {
 	return Key{Key: tcell.KeyEscape, Modifiers: tcell.ModNone}
 }
 
-func DefaultKeyBindingFind() Key {
-	return Key{Key: tcell.KeyF, Modifiers: tcell.ModCtrl}
+func DefaultKeyBindingFind() KeyChord {
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('f'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingFindSecondary1Chord() KeyChord {
-	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('i'), Modifiers: tcell.ModNone}}
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('i'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingFindSecondary2Chord() KeyChord {
-	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('g'), Modifiers: tcell.ModNone}}
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('g'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingFindNext() Key {
@@ -106,15 +110,15 @@ func DefaultCursorColor() Color {
 }
 
 func DefaultKeyBindingToggleTerminalChord() KeyChord {
-	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key(';'), Modifiers: tcell.ModNone}}
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key(';'), Modifiers: tcell.ModNone}}
 }
 
-func DefaultKeyBindingToggleLineEnding() Key {
-	return Key{Key: tcell.Key('l'), Modifiers: tcell.ModCtrl}
+func DefaultKeyBindingToggleLineEnding() KeyChord {
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('l'), Modifiers: tcell.ModNone}}
 }
 
-func DefaultKeyBindingToggleExpandTabs() Key {
-	return Key{Key: tcell.Key('t'), Modifiers: tcell.ModCtrl}
+func DefaultKeyBindingToggleExpandTabs() KeyChord {
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('t'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultLineEnding() string {
@@ -130,9 +134,9 @@ func DefaultTerminalHeightPercentage() float64 {
 }
 
 func DefaultKeyBindingTerminalIncreaseChord() KeyChord {
-	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('+'), Modifiers: tcell.ModNone}}
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('+'), Modifiers: tcell.ModNone}}
 }
 
 func DefaultKeyBindingTerminalDecreaseChord() KeyChord {
-	return KeyChord{Prefix: Key{Key: tcell.Key('e'), Modifiers: tcell.ModCtrl}, Suffix: Key{Key: tcell.Key('-'), Modifiers: tcell.ModNone}}
+	return KeyChord{Prefix: DefaultChordPrefix(), Suffix: Key{Key: tcell.Key('-'), Modifiers: tcell.ModNone}}
 }
