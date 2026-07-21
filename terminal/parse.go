@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -341,12 +342,7 @@ func in(r rune, min int32, max int32) bool {
 
 // is returns true of the rune matches any of the provided values
 func is(r rune, vals ...int32) bool {
-	for _, val := range vals {
-		if r == val {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(vals, int32(r))
 }
 
 // State functions

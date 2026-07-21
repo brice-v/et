@@ -5,7 +5,7 @@ import (
 )
 
 func (vt *VT) osc(data string) {
-	selector, val, found := cutString(data, ";")
+	selector, val, found := strings.Cut(data, ";")
 	if !found {
 		return
 	}
@@ -30,12 +30,12 @@ func osc8(val string) (string, string) {
 	// OSC 8 ; params ; url ST
 	// params: key1=value1:key2=value2
 	var id string
-	params, url, found := cutString(val, ";")
+	params, url, found := strings.Cut(val, ";")
 	if !found {
 		return "", ""
 	}
-	for _, param := range strings.Split(params, ":") {
-		key, val, found := cutString(param, "=")
+	for param := range strings.SplitSeq(params, ":") {
+		key, val, found := strings.Cut(param, "=")
 		if !found {
 			continue
 		}
@@ -47,10 +47,4 @@ func osc8(val string) (string, string) {
 	return url, id
 }
 
-// Copied from stdlib to here for go 1.16 compat
-func cutString(s string, sep string) (before string, after string, found bool) {
-	if i := strings.Index(s, sep); i >= 0 {
-		return s[:i], s[i+len(sep):], true
-	}
-	return s, "", false
-}
+

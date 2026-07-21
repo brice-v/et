@@ -264,12 +264,12 @@ func (vt *VT) Resize(w int, h int) {
 	vt.activeScreen = vt.primaryScreen
 
 	// transfer primary to new, skipping the last row
-	for row := 0; row < len(primary); row += 1 {
+	for row := range len(primary) {
 		if row == int(last) {
 			break
 		}
 		wrapped := false
-		for col := 0; col < len(primary[0]); col += 1 {
+		for col := range len(primary[0]) {
 			cell := primary[row][col]
 			vt.cursor.attrs = cell.attrs
 			vt.print(cell.content)

@@ -7,7 +7,7 @@ import (
 
 // Sequence is the generic data type of items emitted from the parser. These can
 // be control sequences, escape sequences, or printable characters.
-type Sequence interface{}
+type Sequence any
 
 // A character which should be printed to the screen
 type Print rune

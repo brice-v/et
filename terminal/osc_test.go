@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,7 +61,7 @@ func TestParseOSC8(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Simulate vt.osc
-			selector, val, found := cutString(test.input, ";")
+			selector, val, found := strings.Cut(test.input, ";")
 			if !found {
 				return
 			}

@@ -2,7 +2,6 @@ package editor
 
 import (
 	"log/slog"
-	"strings"
 
 	"github.com/brice-v/et/config"
 	"github.com/brice-v/et/consts"
@@ -78,11 +77,7 @@ func (e *Editor) HandleKeyPress(k *tcell.EventKey) {
 		e.handleDelete()
 	case tcell.KeyTab, tcell.KeyBacktab:
 		if e.promptMode == promptModeNormal {
-			if e.expandTabs {
-				e.handleInsertRune(strings.Repeat(" ", e.cfg.TabWidth))
-			} else {
-				e.handleInsertRune("\t")
-			}
+			e.insertTab()
 		}
 	}
 	e.updateViewport()
@@ -119,59 +114,7 @@ func (e *Editor) handleAwaitingChord(key tcell.Key, keyAsRune string, k *tcell.E
 	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ExitPrompt) {
 		return true
 	}
-	// Global chord actions
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Quit.Suffix) {
-		e.Exit = true
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.Find.Suffix) {
-		if e.promptMode == promptModeFind {
-			e.Find.Mode = findModeExact
-			e.Find.LastSearchTerm = ""
-			e.updatePromptLabel(e.getPromptFindLabel())
-		} else {
-			e.promptMode = promptModeFind
-			e.prompt(e.getPromptFindLabel())
-		}
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleLineEnding.Suffix) {
-		e.buffer.ToggleLineEnding()
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleExpandTabs.Suffix) {
-		e.ToggleExpandTabs()
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.ToggleTerminal.Suffix) {
-		e.ToggleTerminal()
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.TerminalIncreaseChord.Suffix) {
-		e.IncreaseTerminalHeight()
-		return true
-	}
-	if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.TerminalDecreaseChord.Suffix) {
-		e.DecreaseTerminalHeight()
-		return true
-	}
-	// Find mode specific suffixes
-	if e.promptMode == promptModeFind {
-		if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary1Chord.Suffix) {
-			e.Find.Mode = findModeIgnoreCase
-			e.Find.LastSearchTerm = ""
-			e.updatePromptLabel(e.getPromptFindLabel())
-			return true
-		}
-		if keys.IsKey(key, keyAsRune, k.Modifiers(), e.cfg.KeyBindings.FindSecondary2Chord.Suffix) {
-			e.Find.Mode = findModeRegex
-			e.Find.LastSearchTerm = ""
-			e.updatePromptLabel(e.getPromptFindLabel())
-			return true
-		}
-	}
-	e.chordInvalidSuffix = "invalid suffix " + k.Name()
-	return true
+	return e.handleChordSuffix(key, keyAsRune, k)
 }
 
 // startChord checks if the key matches the configured chord prefix and enters chord awaiting mode.
@@ -407,10 +350,7 @@ func (e *Editor) prompt(label string) {
 	// The prompt is drawn at e.sh - 1 during drawEditorArea, where e.sh is
 	// reduced by terminalHeight() + 1, so the absolute screen line is
 	// e.sh - terminalHeight() - 2.
-	e.cy = e.sh - e.terminalHeight() - 2
-	if e.cy < 0 {
-		e.cy = 0
-	}
+	e.cy = max(e.sh-e.terminalHeight()-2, 0)
 	e.cx = len(e.promptLabel)
 }
 
