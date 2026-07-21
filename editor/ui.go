@@ -240,6 +240,10 @@ func (e *Editor) drawTerminal() {
 }
 
 func (e *Editor) drawTerminalCursor(th int) {
+	if e.promptLabel != nil {
+		e.s.ShowCursor(e.cx, e.cy)
+		return
+	}
 	if !e.termOpen || e.term == nil {
 		e.s.ShowCursor(e.cx, e.cy)
 		return

@@ -404,7 +404,13 @@ func (e *Editor) prompt(label string) {
 	e.sbh++
 	e.updatePromptLabel(label)
 	e.promptInput = []rune{}
-	e.cy = e.sh - 1
+	// The prompt is drawn at e.sh - 1 during drawEditorArea, where e.sh is
+	// reduced by terminalHeight() + 1, so the absolute screen line is
+	// e.sh - terminalHeight() - 2.
+	e.cy = e.sh - e.terminalHeight() - 2
+	if e.cy < 0 {
+		e.cy = 0
+	}
 	e.cx = len(e.promptLabel)
 }
 

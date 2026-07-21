@@ -294,6 +294,13 @@ func (e *Editor) ToggleTerminal() {
 		e.term = terminal.New()
 	}
 	e.termOpen = true
+	// Recalculate cursor Y when opening terminal while in prompt mode
+	if e.promptLabel != nil {
+		e.cy = e.sh - e.terminalHeight() - 2
+		if e.cy < 0 {
+			e.cy = 0
+		}
+	}
 	th := e.terminalHeight()
 	vt := e.term
 	e.updateTermSurface(th)
